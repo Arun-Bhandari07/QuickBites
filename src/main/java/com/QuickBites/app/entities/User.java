@@ -5,7 +5,6 @@ import java.time.LocalDateTime;
 import java.util.HashSet;
 import java.util.Set;
 
-import org.checkerframework.common.aliasing.qual.Unique;
 import org.hibernate.annotations.CreationTimestamp;
 
 import jakarta.persistence.Column;
@@ -30,6 +29,7 @@ public class User {
 	
 	@Id
 	@GeneratedValue(strategy=GenerationType.IDENTITY)
+	@Column(updatable=false)
 	private int id;
 	
 	@NotNull
@@ -42,6 +42,8 @@ public class User {
 	private String password;
 	
 	@Column(unique=true)
+	@NotNull
+	@NotBlank
 	private String email;
 	
 	@Column(unique=true)
@@ -65,9 +67,7 @@ public class User {
 		return id;
 	}
 
-	public void setId(int id) {
-		this.id = id;
-	}
+	
 
 	public String getFirstName() {
 		return firstName;

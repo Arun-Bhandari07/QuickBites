@@ -43,7 +43,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             try {
                 username = jwtUtils.extractUsername(token);
             } catch (Exception e) {
-                // Invalid token
+              
             }
         }
 

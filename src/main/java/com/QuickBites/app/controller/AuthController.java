@@ -15,6 +15,7 @@ import com.QuickBites.app.DTO.CustomerRegisterRequest;
 import com.QuickBites.app.DTO.LoginRequest;
 import com.QuickBites.app.DTO.LoginResponse;
 import com.QuickBites.app.services.AuthService;
+import com.QuickBites.app.services.MailService;
 
 import jakarta.validation.Valid;
 
@@ -24,6 +25,8 @@ public class AuthController {
 
 	@Autowired
 	AuthService authService;
+	
+
 	
 	public AuthController(){}
 	
@@ -41,7 +44,7 @@ public class AuthController {
 	
 
 	@PostMapping("/signup/customer")
-	public ResponseEntity<?> customerSignUp( @Valid @RequestBody CustomerRegisterRequest regReq) {
+	public ResponseEntity<?> customerSignUp(@Valid @RequestBody CustomerRegisterRequest regReq) {
 		try {
 			authService.registerCustomer(regReq);
 			return ResponseEntity.status(HttpStatus.OK).body("User registered Successfully");
@@ -50,6 +53,8 @@ public class AuthController {
 		}
 	}
 
+	
+	
 	@PostMapping("/signup/agent")
 	public ResponseEntity<?> agentSignUp(@ModelAttribute AgentRegisterRequest regReq) {
 		try {

@@ -48,6 +48,9 @@ public class AuthService {
 	DeliveryAgentRepository agentRepo;
 	
 	@Autowired
+	MailService mailService;
+	
+	@Autowired
 	SecurityConfig config;
 	
 	public  AuthService(JWTUtilities jwtUtilities) {
@@ -78,14 +81,21 @@ public class AuthService {
 		User user = populateUserFromRequest(regReq);
 		Optional<UserRole>  optRole = userRoleRepo.findByRole(RoleName.ROLE_CUSTOMER); 
 		user.getRoles().add(optRole.get());
-		userRepo.save(user);
+		
+		try {
+			mailService.sendMail(regReq.getEmail(),56778);
+		}catch(Exception e) {
+			throw new RuntimeException(e.getMessage());
+		}
+		
+//		userRepo.save(user);
 	}
 	
 	public void registerAgent(AgentRegisterRequest regReq) throws Exception{
 		System.out.println("Received Username: " + new ObjectMapper().writeValueAsString(regReq.getUserName()));
 		System.out.println("Recived Licesne Photo :"+new ObjectMapper().writeValueAsString(regReq.getDrivingLicense().getOriginalFilename()));
-
 		System.out.println("Recived Citizenship Photo :"+new ObjectMapper().writeValueAsString(regReq.getCitizenshipPhoto().getOriginalFilename()));
+		
 		String citizenshipPhoto = "";
 		String drivingLicense = "";
 		if(userRepo.existsByUserName(regReq.getUserName())) {
@@ -134,6 +144,8 @@ public class AuthService {
 		user.setUserName(regReq.getUserName());
 		return user;
 	}
+	
+	
 	
 	
 	

@@ -19,6 +19,10 @@ import jakarta.validation.constraints.Size;
 		private String password;
 		
 		@NotBlank
+		private String email;
+		
+		
+		@NotBlank
 		private String address;
 	
 		
@@ -61,6 +65,13 @@ import jakarta.validation.constraints.Size;
 
 	public void setAddress(String address) {
 		this.address = address;
+	}
+	public String getEmail() {
+		return email;
+	}
+
+	public void setEmail(String email) {
+		this.email = email;
 	}
 
 
