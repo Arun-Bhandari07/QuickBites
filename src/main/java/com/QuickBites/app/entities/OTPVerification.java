@@ -9,18 +9,23 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
+import jakarta.persistence.PrePersist;
+import jakarta.persistence.Transient;
 
 @Entity
 public class OTPVerification {
 	
 	public  OTPVerification() {}
 	
+	@Transient
+	private final int OTP_Validity_period = 5;
+	
 	@Id
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
 	@Column(updatable=false)
 	private int id;
 	
-	private int otp;
+	private String otp;
 	
 	private String email;
 	
@@ -29,6 +34,20 @@ public class OTPVerification {
 	
 	private LocalDateTime expiryAt;
 	
+
+	public LocalDateTime getExpiryAt() {
+		return expiryAt;
+	}
+
+	public void setExpiryAt(LocalDateTime expiryAt) {
+		this.expiryAt = expiryAt;
+	}
+
+	@PrePersist
+	public void setExpiration() {
+		this.createdAt = LocalDateTime.now();
+		this.expiryAt = this.createdAt.plusMinutes(OTP_Validity_period);
+	}
 	
 	public int getId() {
 		return id;
@@ -38,11 +57,11 @@ public class OTPVerification {
 		this.id = id;
 	}
 
-	public int getOtp() {
+	public String getOtp() {
 		return otp;
 	}
 
-	public void setOtp(int otp) {
+	public void setOtp(String otp) {
 		this.otp = otp;
 	}
 
@@ -61,16 +80,5 @@ public class OTPVerification {
 	public void setCreatedAt(LocalDateTime createdAt) {
 		this.createdAt = createdAt;
 	}
-
-	public LocalDateTime getExpiryAt() {
-		return expiryAt;
-	}
-
-	public void setExpiryAt(LocalDateTime expiryAt) {
-		this.expiryAt = expiryAt;
-	}
-
-	
-	
 	
 }

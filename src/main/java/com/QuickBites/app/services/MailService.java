@@ -2,6 +2,7 @@ package com.QuickBites.app.services;
 
 import java.io.UnsupportedEncodingException;
 
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.mail.javamail.MimeMessageHelper;
 import org.springframework.stereotype.Service;
@@ -11,6 +12,9 @@ import jakarta.mail.internet.MimeMessage;
 
 @Service
 public class MailService  {
+	
+	@Autowired
+	OTPService otpService;
 
 	private final JavaMailSender mailSender;
 	
@@ -20,20 +24,24 @@ public class MailService  {
 		this.mailSender = mailSender;
 	}
 
-	public void sendMail( String to ,int verificationCode) throws MessagingException, UnsupportedEncodingException{
+	public void sendMail( String to) throws MessagingException, UnsupportedEncodingException{
 		 MimeMessage mimeMessage =mailSender.createMimeMessage();
 		 MimeMessageHelper mimeMessageHelper = new MimeMessageHelper(mimeMessage);
 		 mimeMessageHelper.setFrom(emailSender,"Quick Bites Support");
 		 mimeMessageHelper.setTo(to);
 		 mimeMessageHelper.setSubject("Your QuickBites Verification Code");
-		 String content = emailTemplateBuilder(verificationCode);
-		 mimeMessageHelper.setText(content,false);
+		 
+		 String otp = otpService.generateOTP();
+		 String content = emailTemplateBuilder(otp);
+		 mimeMessageHelper.setText(content,true);
 
-		 mailSender.send(mimeMessage);	 
+		 otpService.saveOTP(otp, to);
+		 mailSender.send(mimeMessage);
+			
 	}
 	
 	
-	public String emailTemplateBuilder(int verificationCode) {
+	public String emailTemplateBuilder(String verificationCode) {
 		return """
 				<div>
 		 			<h2>Account Verification - QuickBites</h2>
@@ -49,4 +57,7 @@ public class MailService  {
             </p>
 				""".formatted(verificationCode);
 	}
+	
+	
+	
 }

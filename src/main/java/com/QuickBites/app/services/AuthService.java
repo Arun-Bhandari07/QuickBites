@@ -77,19 +77,20 @@ public class AuthService {
 	public void registerCustomer(CustomerRegisterRequest regReq) {
 		if(userRepo.existsByUserName(regReq.getUserName())) {
 			throw new RuntimeException("Username already Taken");
-		}
+		}	
 		User user = populateUserFromRequest(regReq);
 		Optional<UserRole>  optRole = userRoleRepo.findByRole(RoleName.ROLE_CUSTOMER); 
 		user.getRoles().add(optRole.get());
 		
 		try {
-			mailService.sendMail(regReq.getEmail(),56778);
+			mailService.sendMail(regReq.getEmail());
 		}catch(Exception e) {
-			throw new RuntimeException(e.getMessage());
+			throw new RuntimeException("Error with sending emails:"+e.getMessage());
 		}
 		
 //		userRepo.save(user);
 	}
+	
 	
 	public void registerAgent(AgentRegisterRequest regReq) throws Exception{
 		System.out.println("Received Username: " + new ObjectMapper().writeValueAsString(regReq.getUserName()));
