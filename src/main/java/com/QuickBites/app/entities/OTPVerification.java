@@ -25,6 +25,12 @@ public class OTPVerification {
 	@Column(updatable=false)
 	private int id;
 	
+	@PrePersist
+	public void setExpiration() {
+		this.createdAt = LocalDateTime.now();
+		this.expiryAt = this.createdAt.plusMinutes(OTP_Validity_period);
+	}
+	
 	private String otp;
 	
 	private String email;
@@ -43,11 +49,7 @@ public class OTPVerification {
 		this.expiryAt = expiryAt;
 	}
 
-	@PrePersist
-	public void setExpiration() {
-		this.createdAt = LocalDateTime.now();
-		this.expiryAt = this.createdAt.plusMinutes(OTP_Validity_period);
-	}
+	
 	
 	public int getId() {
 		return id;

@@ -1,5 +1,6 @@
 package com.QuickBites.app.repositories;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 
@@ -13,4 +14,5 @@ public interface OTPrepository extends JpaRepository<OTPVerification, Integer>{
 			void deleteByEmail(String email);
 			Optional<OTPVerification> findByEmail(String email);
 			List<OTPVerification> findAllByEmail(String email);
+			List<OTPVerification> findByExpiryAtBefore(LocalDateTime time);
 }

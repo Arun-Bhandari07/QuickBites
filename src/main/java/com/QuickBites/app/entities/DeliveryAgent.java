@@ -13,8 +13,23 @@ public class DeliveryAgent {
 	@Id
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
 	private int id;
-	private String citizenshipPhoto;
+	private String citizenshipPhotoFront;
+	private String citizenshipPhotoBack;
 	private String drivingLicense;
+	
+	public String getCitizenshipPhotoFront() {
+		return citizenshipPhotoFront;
+	}
+	public void setCitizenshipPhotoFront(String citizenshipPhotoFront) {
+		this.citizenshipPhotoFront = citizenshipPhotoFront;
+	}
+	public String getCitizenshipPhotoBack() {
+		return citizenshipPhotoBack;
+	}
+	public void setCitizenshipPhotoBack(String citizenshipPhotoBack) {
+		this.citizenshipPhotoBack = citizenshipPhotoBack;
+	}
+	
 	
 	@OneToOne
 	@JoinColumn(name="_userId")
@@ -31,12 +46,6 @@ public class DeliveryAgent {
 	}
 	public void setId(int id) {
 		this.id = id;
-	}
-	public String getCitizenshipPhoto() {
-		return citizenshipPhoto;
-	}
-	public void setCitizenshipPhoto(String citizenshipPhoto) {
-		this.citizenshipPhoto = citizenshipPhoto;
 	}
 	public String getDrivingLicense() {
 		return drivingLicense;

@@ -16,7 +16,7 @@ public class CustomUserDetailsService implements UserDetailsService {
 	public CustomUserDetailsService() {}
 
 	@Autowired
-	UserRepository userRepo;
+     private UserRepository userRepo;
 	
 	@Override
 	public UserDetails loadUserByUsername(String userName){

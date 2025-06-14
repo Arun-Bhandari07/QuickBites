@@ -42,11 +42,11 @@ public class AdminInitializer {
 			agentRole.setDescription("This is delivery agent");
 			agentRole.setRole(RoleName.ROLE_DELIVERYAGENT);
 			userRoleRepo.save(agentRole);
-			
-			
-			
+		
 			User user = new User();
 			user.setFirstName("admin");
+			user.setLastName("01");
+			user.setPhone("9856134675");
 			user.setPassword(BCrypt.hashpw("admin",BCrypt.gensalt()));
 			user.setUserName("admin");
 			user.setCreatedAt(LocalDateTime.now());

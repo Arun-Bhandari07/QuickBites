@@ -15,17 +15,31 @@ import jakarta.validation.constraints.Size;
 		@Size(min=3, message="Username must at least 3 characters")
 		private String userName;
 		
-		@NotBlank
+		@NotBlank(message="Password must not be empty")
+		@Size(min=6, message="Password must be at least 6 characters")
 		private String password;
 		
-		@NotBlank
+		@NotBlank(message="Password must not be empty")
 		private String email;
 		
+		private String phone;
 		
-		@NotBlank
+		@NotBlank(message="Password must not be empty")
 		private String address;
-	
 		
+		public String getPhone() {
+			return phone;
+		}
+
+		public void setPhone(String phone) {
+			this.phone = phone;
+		}
+
+		
+		
+//		private String citizenshipPhoto;
+//		
+//		private String licensePhoto;
 		
 	public String getFirstName() {
 		return firstName;
