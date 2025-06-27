@@ -48,7 +48,9 @@ public class SecurityConfig {
 				.authorizeHttpRequests(auth->auth
 				.requestMatchers(HttpMethod.OPTIONS).permitAll()
 				.requestMatchers("/public/**").permitAll()
+				.requestMatchers("/uploads/**").permitAll()
 				.requestMatchers("/api/v1/auth/**").permitAll()
+				.requestMatchers("/api/v1/admin/**").permitAll()
 				.anyRequest().authenticated())
 				.formLogin(form->form.disable())
 				.sessionManagement(session->session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
@@ -61,7 +63,7 @@ public class SecurityConfig {
 	@Bean
 	public  CorsConfigurationSource corsConfigurationSource() {
 		CorsConfiguration config = new CorsConfiguration();
-		config.setAllowedOrigins(List.of("https://8b17-111-119-35-71.ngrok-free.app","http://localhost:3000"));
+		config.setAllowedOrigins(List.of("https://d5f9-103-167-232-191.ngrok-free.app/","http://localhost:3000"));
 		config.setAllowedMethods(List.of("GET","POST","PUT","DELETE","OPTIONS"));
 		config.setAllowedHeaders(List.of("Authorization","Content-Type"));
 		config.setAllowCredentials(true);

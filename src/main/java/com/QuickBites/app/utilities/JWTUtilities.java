@@ -73,8 +73,6 @@ public class JWTUtilities{
 	}
 	
 	
-	
-	
 	public Claims extractTokenBody(String token) {
 		return Jwts.parserBuilder().setSigningKey(secretKey).build().parseClaimsJws(token).getBody();
 	}

@@ -5,7 +5,6 @@ import java.time.LocalDateTime;
 import java.util.HashSet;
 import java.util.Set;
 
-import jakarta.persistence.CascadeType;
 import org.hibernate.annotations.CreationTimestamp;
 
 import jakarta.persistence.Column;
@@ -58,7 +57,7 @@ public class User {
 	private LocalDateTime createdAt;
 	
 	
-	@ManyToMany(fetch = FetchType.EAGER, cascade= {CascadeType.ALL})
+	@ManyToMany(fetch = FetchType.EAGER)
 	@JoinTable(
 			name="user_roles",
 			joinColumns = @JoinColumn(name="user_id"),

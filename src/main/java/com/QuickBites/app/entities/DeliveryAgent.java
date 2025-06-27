@@ -17,6 +17,10 @@ public class DeliveryAgent {
 	private String citizenshipPhotoBack;
 	private String drivingLicense;
 	
+	@OneToOne
+	@JoinColumn(name="_userId")
+	User user;	
+	
 	public String getCitizenshipPhotoFront() {
 		return citizenshipPhotoFront;
 	}
@@ -31,9 +35,7 @@ public class DeliveryAgent {
 	}
 	
 	
-	@OneToOne
-	@JoinColumn(name="_userId")
-	User user;	
+	
 	
 	public User getUser() {
 		return user;

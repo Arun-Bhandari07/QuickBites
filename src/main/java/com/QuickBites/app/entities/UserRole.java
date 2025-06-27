@@ -1,5 +1,7 @@
 package com.QuickBites.app.entities;
 
+import com.QuickBites.app.enums.RoleName;
+
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;

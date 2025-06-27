@@ -17,6 +17,7 @@ import com.QuickBites.app.Exception.InvalidFileException;
 
 @Service
 public class FileService {
+	
 
 	@Value("${file.storage.orgpath}")
 	private  final String orgPath;
@@ -27,7 +28,7 @@ public class FileService {
 	@Value("${file.storage.maxSize}")
 	private final long maxFileSize;
 	
-	public static final Set<String> ALLOWED_EXTENSION = Set.of(".jpg",".png",".webp",".jpeg");
+	public static final Set<String> ALLOWED_EXTENSION = Set.of("jpg","png","webp","jpeg");
 	public static final Set<String> ALLOWED_MIME_TYPE = Set.of("image/jpeg", "image/png","image/jpg","image/webp");
 	
 	public FileService(@Value("${file.storage.orgpath}") String orgPath,
@@ -60,30 +61,26 @@ public class FileService {
 	}
 		
 	public void moveFile(String fileName) throws IOException{
-		
 		Path sourcePath = Paths.get(tempPath,fileName).normalize();
 		Path destinationPath = Paths.get(orgPath,fileName).normalize();	
-		Files.createDirectories(sourcePath);
-		Files.createDirectories(destinationPath);
 		
 		try {
 			Files.move(sourcePath, destinationPath, StandardCopyOption.REPLACE_EXISTING);
 		}catch(IOException ex) {
+		
 			throw new FileStorageException("Error moving file",ex);
 		}
 		
 	}
 	
 	public void validateFile(MultipartFile file) {
+		if( file==null || file.isEmpty()) {
+			throw new InvalidFileException("File is null");
+		}
 		String orignalFileName = file.getOriginalFilename();
 		long fileSize = file.getSize();
 		String fileType = file.getContentType();
 		String fileExtension = orignalFileName.substring(orignalFileName.lastIndexOf(".")+1).toLowerCase();
-		
-		//handle empty file
-		if(file.isEmpty() || file==null ) {
-			throw new InvalidFileException("File is null");
-		}
 		
 		//handle file size
 		if(fileSize>maxFileSize) {

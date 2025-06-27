@@ -16,14 +16,15 @@ import com.QuickBites.app.DTO.ApiResponse;
 import com.QuickBites.app.DTO.CustomerRegisterRequest;
 import com.QuickBites.app.DTO.LoginRequest;
 import com.QuickBites.app.DTO.LoginResponse;
+import com.QuickBites.app.Exception.FileStorageException;
 import com.QuickBites.app.Exception.InvalidCredentialsException;
-import com.QuickBites.app.Exception.UserAlreadyExistsException;
+import com.QuickBites.app.Exception.ResourceAlreadyExistsException;
 import com.QuickBites.app.Exception.UserNotFoundException;
 import com.QuickBites.app.Exception.UserVerificationException;
 import com.QuickBites.app.configurations.SecurityConfig;
 import com.QuickBites.app.entities.PendingUser;
-import com.QuickBites.app.entities.RoleName;
 import com.QuickBites.app.entities.User;
+import com.QuickBites.app.enums.RoleName;
 import com.QuickBites.app.repositories.DeliveryAgentRepository;
 import com.QuickBites.app.repositories.PendingUserRepository;
 import com.QuickBites.app.repositories.UserRepository;
@@ -94,11 +95,11 @@ public class AuthService {
 
 	public void registerPendingUser(CustomerRegisterRequest req) {
 		if (userRepo.existsByUserName(req.getUserName()) || (userRepo.existsByEmail(req.getEmail()))) {
-			throw new UserAlreadyExistsException("Username already Taken");
+			throw new ResourceAlreadyExistsException("Username already Taken"+req.getUserName());
 		}
 
 		if (pendingUserRepo.existsByEmail(req.getEmail())) {
-			throw new UserVerificationException("User verification in progress");
+			throw new UserVerificationException("User verification in progress"+req.getEmail());
 		}
 
 		PendingUser user = new PendingUser(); // saves a temporary user before verifying otp
@@ -116,16 +117,21 @@ public class AuthService {
 			String citizenshipPathBack = "";
 			String licensePath = "";
 			AgentRegisterRequest agentReq = (AgentRegisterRequest) req;
-			user.setRoleName(RoleName.ROLE_DELIVERYAGENT);
+			try {
 				citizenshipPathFront = fileService.saveFile(agentReq.getCitizenshipPhotoFront());
 				citizenshipPathBack = fileService.saveFile(agentReq.getCitizenshipPhotoBack());
 				licensePath = fileService.saveFile(agentReq.getDrivingLicense());
+			}catch(Exception ex) {
+				throw new FileStorageException("Problem with storing File",ex);
+			}
+				
 			user.setCitizenshipPhotoFront(citizenshipPathFront);
 			user.setCitizenshipPhotoBack(citizenshipPathBack);
 			user.setDriverLicense(licensePath);
 			user.setRoleName(RoleName.ROLE_DELIVERYAGENT);
 			adminNotificationService.notifyAdmin(user);
 		}
+	
 		pendingUserRepo.save(user);
 		mailService.sendMail(user.getEmail());
 		

@@ -1,4 +1,4 @@
-package com.QuickBites.app.entities;
+package com.QuickBites.app.enums;
 
 public enum RoleName {
 ROLE_ADMIN,

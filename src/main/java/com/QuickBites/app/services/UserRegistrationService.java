@@ -9,11 +9,11 @@ import com.QuickBites.app.Exception.FileStorageException;
 import com.QuickBites.app.Exception.OtpValidationException;
 import com.QuickBites.app.Exception.RegistrationException;
 import com.QuickBites.app.Exception.ResourceNotFoundException;
-import com.QuickBites.app.Exception.UserAlreadyExistsException;
+import com.QuickBites.app.Exception.ResourceAlreadyExistsException;
 import com.QuickBites.app.entities.DeliveryAgent;
 import com.QuickBites.app.entities.PendingUser;
-import com.QuickBites.app.entities.RoleName;
 import com.QuickBites.app.entities.User;
+import com.QuickBites.app.enums.RoleName;
 import com.QuickBites.app.repositories.DeliveryAgentRepository;
 import com.QuickBites.app.repositories.PendingUserRepository;
 import com.QuickBites.app.repositories.UserRepository;
@@ -118,7 +118,7 @@ public class UserRegistrationService {
 				.orElseThrow(()->new ResourceNotFoundException("User not found"));
 		
 		if(userRepo.existsByEmail(email)) {
-			throw new UserAlreadyExistsException("Email already registered");
+			throw new ResourceAlreadyExistsException("Email already registered");
 		}
 		return pendingUser;
 	}

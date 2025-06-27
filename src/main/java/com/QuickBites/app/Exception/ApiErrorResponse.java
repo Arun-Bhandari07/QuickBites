@@ -4,6 +4,8 @@ import java.time.LocalDateTime;
 import java.util.Collections;
 import java.util.Map;
 
+import com.fasterxml.jackson.annotation.JsonInclude;
+
 public class ApiErrorResponse {
 	
 	private final String message;
@@ -11,6 +13,8 @@ public class ApiErrorResponse {
 	private final int status;
 	private final String path;
 	private final String errorCode;
+	
+	@JsonInclude(JsonInclude.Include.NON_EMPTY)
 	private final Map<String,Object> fieldErrors;
 	
 

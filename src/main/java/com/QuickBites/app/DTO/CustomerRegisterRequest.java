@@ -5,6 +5,10 @@ import jakarta.validation.constraints.Size;
 
 	public class CustomerRegisterRequest {
 		
+		public CustomerRegisterRequest() {
+			
+		}
+		
 		@NotBlank(message="Firstname should be filled")
 		private String firstName;
 		
@@ -34,12 +38,6 @@ import jakarta.validation.constraints.Size;
 		public void setPhone(String phone) {
 			this.phone = phone;
 		}
-
-		
-		
-//		private String citizenshipPhoto;
-//		
-//		private String licensePhoto;
 		
 	public String getFirstName() {
 		return firstName;

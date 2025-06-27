@@ -10,9 +10,10 @@ import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 
 import com.QuickBites.app.Exception.OtpValidationException;
+import com.QuickBites.app.Exception.UserNotFoundException;
 import com.QuickBites.app.entities.OTPVerification;
 import com.QuickBites.app.entities.PendingUser;
-import com.QuickBites.app.entities.RoleName;
+import com.QuickBites.app.enums.RoleName;
 import com.QuickBites.app.repositories.OTPrepository;
 import com.QuickBites.app.repositories.PendingUserRepository;
 
@@ -70,7 +71,7 @@ public class OTPService {
 		}
 		
 		PendingUser pendingUser = pendingUserRepo.findByEmail(email)
-									.orElseThrow(()->new RuntimeException("User doesn't exists in pending Area"));
+									.orElseThrow(()->new UserNotFoundException("User doesn't exists in pending Area"));
 
 		pendingUser.setOtpVerified(true);
 		pendingUserRepo.save(pendingUser);

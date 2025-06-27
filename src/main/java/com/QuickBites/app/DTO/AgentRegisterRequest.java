@@ -2,17 +2,19 @@ package com.QuickBites.app.DTO;
 
 import org.springframework.web.multipart.MultipartFile;
 
-import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
 
 public class AgentRegisterRequest extends CustomerRegisterRequest{
+	
+	public AgentRegisterRequest() {}
 
-	@NotBlank(message="CitizenshipPhoto must not be present")
+	@NotNull(message="CitizenshipPhoto must not be present")
 	private MultipartFile citizenshipPhotoFront;
 	
-	@NotBlank(message="DrivingLicense must not be present")
+	@NotNull(message="DrivingLicense must not be present")
 	private MultipartFile drivingLicense;
 	
-	@NotBlank(message="CitizenshipPhoto must not be present")
+	@NotNull(message="CitizenshipPhoto must not be present")
 	private MultipartFile citizenshipPhotoBack;
 	
 	public MultipartFile getCitizenshipPhotoFront() {

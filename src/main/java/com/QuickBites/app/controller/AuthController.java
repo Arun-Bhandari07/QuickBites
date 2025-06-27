@@ -5,6 +5,7 @@ import java.util.Map;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -72,8 +73,7 @@ public class AuthController {
 	public ResponseEntity<?> verifyOTP(@RequestBody Map<String,String> payload){
 			Boolean verified = otpService.verifyOTP(payload.get("email"),payload.get("otp"));
 			
-			return ResponseEntity.status(HttpStatus.ACCEPTED).body("OTP_VERIFIED");
-		
+			return ResponseEntity.status(HttpStatus.ACCEPTED).body("OTP_VERIFIED");	
 	}
 	
 	

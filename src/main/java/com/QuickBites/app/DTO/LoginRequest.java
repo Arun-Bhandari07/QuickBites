@@ -10,7 +10,6 @@ public class LoginRequest {
 	private String username;
 	
 	@NotBlank(message="Password field should not be blank")
-	@Size(min=6, message="Password should be minimum 6 characters")
 	private String password;
 	
 	public String getUsername() {
