@@ -1,10 +1,7 @@
 package com.QuickBites.app.Exception;
-
 import java.util.HashMap;
 import java.util.Map;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.FieldError;
@@ -15,7 +12,6 @@ import org.springframework.web.context.request.WebRequest;
 
 @RestControllerAdvice
 public class GlobalExceptionHandler{
-	private static final Logger logger  = LoggerFactory.getLogger(GlobalExceptionHandler.class);
 	
 	@ExceptionHandler(ResourceNotFoundException.class)
 	public ResponseEntity<ApiErrorResponse> handleResourceNotFound(ResourceNotFoundException ex, WebRequest req){
@@ -105,13 +101,23 @@ public class GlobalExceptionHandler{
 	
 	@ExceptionHandler(FileHandlingException.class)
 	public ResponseEntity<ApiErrorResponse> handleFileException(FileHandlingException ex, WebRequest req){
-		logger.error(ex.toString(),ex.getStackTrace());
+		
 		ApiErrorResponse res = new ApiErrorResponse(
 				ex.getMessage()
 				,HttpStatus.BAD_REQUEST.value()
 				,req.getDescription(false).substring(4)
 				,"BAD_REQUEST");
 		return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(res);
+	}
+	
+	@ExceptionHandler(MaxUploadSizeExceededException.class)
+	public ResponseEntity<ApiErrorResponse> handleMaxSizeExceedException(MaxUploadSizeExceededException ex, WebRequest req){
+		ApiErrorResponse res = new ApiErrorResponse(
+				ex.getMessage()
+				,HttpStatus.PAYLOAD_TOO_LARGE.value()
+				,req.getDescription(false).substring(4)
+				,"PAYLOAD_TOO_LARGE");
+		return ResponseEntity.status(HttpStatus.PAYLOAD_TOO_LARGE).body(res);
 	}
 	
 	@ExceptionHandler(Exception.class)

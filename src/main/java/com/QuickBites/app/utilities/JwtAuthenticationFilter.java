@@ -10,6 +10,7 @@ import org.springframework.security.web.authentication.WebAuthenticationDetailsS
 import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
 
+import com.QuickBites.app.repositories.TokenRepository;
 import com.QuickBites.app.services.CustomUserDetailsService;
 
 import jakarta.servlet.FilterChain;
@@ -25,6 +26,9 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
     @Autowired
     private CustomUserDetailsService userDetailsService;
+    
+    @Autowired
+    private TokenRepository tokenRepository;
 
     @Override
     protected void doFilterInternal(HttpServletRequest request,
@@ -46,12 +50,19 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
               
             }
         }
+       if(username!=null) {
+    	   String storedToken = tokenRepository.getAccessKeyToken(username);
+        if(storedToken == null || !storedToken.equals(token)) {
+        	filterChain.doFilter(request, response);
+        }
+       }
+        
 
         // If username is valid and no auth is set yet
         if (username != null && SecurityContextHolder.getContext().getAuthentication() == null) {
             UserDetails userDetails = userDetailsService.loadUserByUsername(username);
 
-            if (jwtUtils.validateToken(token)) {
+            if (jwtUtils.isValidToken(token,userDetails)) {
                 UsernamePasswordAuthenticationToken authToken =
                     new UsernamePasswordAuthenticationToken(
                         userDetails, null, userDetails.getAuthorities()

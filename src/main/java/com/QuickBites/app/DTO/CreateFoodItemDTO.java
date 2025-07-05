@@ -4,8 +4,7 @@ import java.math.BigDecimal;
 
 import org.springframework.web.multipart.MultipartFile;
 
-import com.QuickBites.app.entities.FoodCategory;
-
+import jakarta.validation.constraints.DecimalMin;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 
@@ -15,6 +14,7 @@ public class CreateFoodItemDTO {
 	private String name;
 	
 	@NotNull(message="Price should be mentioned")
+	@DecimalMin(value="0.0", inclusive=false, message="Price must be greater than 0")
 	private BigDecimal price;
 	
 	@NotNull(message="Image must be provided")

@@ -6,6 +6,6 @@ import org.springframework.stereotype.Repository;
 import com.QuickBites.app.entities.FoodVariant;
 
 @Repository
-public interface FoodVariantRepository extends JpaRepository<FoodVariant,Integer> {
-
+public interface FoodVariantRepository extends JpaRepository<FoodVariant,Long> {
+	boolean existsByNameAndFoodItemId(String name, Long id);
 }

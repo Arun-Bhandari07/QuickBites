@@ -14,6 +14,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
 import org.springframework.web.multipart.MultipartFile;
 
+import com.QuickBites.app.Exception.FileHandlingException;
 import com.QuickBites.app.Exception.FileUploadException;
 import com.QuickBites.app.Exception.InvalidFileException;
 import com.QuickBites.app.enums.ImageType;
@@ -77,6 +78,24 @@ public class ImageService {
 			return basePath;
 		}else {
 			throw new FileUploadException("Error with file path");
+		}
+	}
+	
+	public void deleteImage(String imageName,ImageType imageType) {
+		if(imageName == null || imageName.isEmpty()) {
+			throw new InvalidFileException("Image is not present with name: "+imageName);
+		}
+		Path path = Paths.get(imagePath);
+		if(imageType.equals(ImageType.FOOD_CATEGORY)) {
+			path = path.resolve("FoodCategoryImages");
+		}else if(imageType.equals(ImageType.FOOD_ITEM)) {
+			path = path.resolve("FoodItemImages");
+		}
+		path = path.resolve(imageName).normalize().toAbsolutePath();
+		try {
+			Files.deleteIfExists(path);
+		} catch (IOException ex) {
+			throw new FileHandlingException("Error on deleting image:"+imageName+" "+ex.getMessage(),ex);
 		}
 	}
 	

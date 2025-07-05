@@ -2,15 +2,21 @@ package com.QuickBites.app.DTO;
 
 import java.math.BigDecimal;
 
-import com.QuickBites.app.entities.FoodItem;
+import jakarta.validation.constraints.DecimalMin;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
 
 public class CreateFoodVariantDTO {
 
+	@NotBlank(message="Please fill Name")
 	private String name;
 	
+	@NotNull(message="Price is needed")
+	@DecimalMin(value="0.01" ,message="Price must be greater than 0")	
 	private BigDecimal price;
 	
-	private FoodItem foodItem;
+	@NotNull(message="Select one of the foodItem")
+	private Long foodItemId;
 
 	public String getName() {
 		return name;
@@ -28,12 +34,12 @@ public class CreateFoodVariantDTO {
 		this.price = price;
 	}
 
-	public FoodItem getFoodItem() {
-		return foodItem;
+	public Long getFoodItemId() {
+		return foodItemId;
 	}
 
-	public void setFoodItem(FoodItem foodItem) {
-		this.foodItem = foodItem;
+	public void setFoodItemId(Long foodItemId) {
+		this.foodItemId = foodItemId;
 	}
 	
 }

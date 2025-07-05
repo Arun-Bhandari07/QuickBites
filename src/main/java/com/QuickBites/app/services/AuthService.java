@@ -7,8 +7,11 @@ import java.util.stream.Collectors;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.BadCredentialsException;
+import org.springframework.security.authentication.DisabledException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Service;
 
 import com.QuickBites.app.DTO.AgentRegisterRequest;
@@ -16,9 +19,12 @@ import com.QuickBites.app.DTO.ApiResponse;
 import com.QuickBites.app.DTO.CustomerRegisterRequest;
 import com.QuickBites.app.DTO.LoginRequest;
 import com.QuickBites.app.DTO.LoginResponse;
+import com.QuickBites.app.DTO.RefreshTokenRequest;
+import com.QuickBites.app.DTO.RefreshTokenResponse;
 import com.QuickBites.app.Exception.FileStorageException;
 import com.QuickBites.app.Exception.InvalidCredentialsException;
 import com.QuickBites.app.Exception.ResourceAlreadyExistsException;
+import com.QuickBites.app.Exception.ResourceNotFoundException;
 import com.QuickBites.app.Exception.UserNotFoundException;
 import com.QuickBites.app.Exception.UserVerificationException;
 import com.QuickBites.app.configurations.SecurityConfig;
@@ -27,6 +33,7 @@ import com.QuickBites.app.entities.User;
 import com.QuickBites.app.enums.RoleName;
 import com.QuickBites.app.repositories.DeliveryAgentRepository;
 import com.QuickBites.app.repositories.PendingUserRepository;
+import com.QuickBites.app.repositories.TokenRepository;
 import com.QuickBites.app.repositories.UserRepository;
 import com.QuickBites.app.repositories.UserRoleRepository;
 import com.QuickBites.app.utilities.JWTUtilities;
@@ -41,6 +48,12 @@ public class AuthService {
 
 	@Autowired
 	AuthenticationManager authManager;
+	
+	@Autowired
+	TokenRepository tokenRepository;
+	
+	@Autowired
+	CustomUserDetailsService customUserDetailsService;
 
 	@Autowired
 	UserRepository userRepo;
@@ -71,6 +84,7 @@ public class AuthService {
 	}
 
 	public ApiResponse<LoginResponse> authenticateUser(LoginRequest loginRequest) {
+		Long startTime = System.currentTimeMillis();
 		Authentication authObj;
 		try {
 			authObj = authManager.authenticate(
@@ -79,14 +93,18 @@ public class AuthService {
 			User user = userRepo.findByUserName(customUserDetails.getUsername())
 					.orElseThrow(() -> new UserNotFoundException("User doesn't exists"));
 
-			String jwtToken = jwtUtilities.generateToken(authObj);
-			LoginResponse loginResponse = new LoginResponse(user.getId(), user.getUserName(), jwtToken,
-					jwtUtilities.extractDate(jwtToken));
+			String accessToken = jwtUtilities.generateAccessToken(authObj);
+			String refreshToken = jwtUtilities.generateRefreshToken(authObj);
+			tokenRepository.storeToken(user.getUserName(), accessToken, refreshToken);
+			
+			LoginResponse loginResponse = new LoginResponse(user.getId(), user.getUserName(), accessToken,
+					jwtUtilities.extractDate(accessToken),refreshToken,jwtUtilities.extractDate(refreshToken));
 			Set<String> roles = customUserDetails.getAuthorities().stream().map(role -> role.getAuthority().toString())
 					.collect(Collectors.toSet());
 			loginResponse.setRoles(roles);
 
 			ApiResponse res = new ApiResponse("success", "User logged in", loginResponse);
+			System.out.println("Time in Auth Service: "+(System.currentTimeMillis()-startTime));
 			return res;
 		} catch (BadCredentialsException ex) {
 			throw new InvalidCredentialsException("Invalid username or password");
@@ -159,6 +177,61 @@ public class AuthService {
 			return true;
 		}
 		return false;
+	}
+	
+	public RefreshTokenResponse refreshToken(RefreshTokenRequest req) {
+		//check if the refreshToken is valid
+		if(!jwtUtilities.isRefreshToken(req.getRefreshToken())
+				|| jwtUtilities.isTokenExpired(req.getRefreshToken())) {
+			throw new InvalidCredentialsException("Invalid Refresh Token");
+		};
+		
+		//check if the refresh TOken is blacklisted
+		if(tokenRepository.isRefreshTokenBlackListed(req.getRefreshToken())) {
+			throw new InvalidCredentialsException("BlackListed Refresh Token");
+		}
+		
+		//if valid, extract the username from refreshToken and check if user Exists
+		String username = jwtUtilities.extractUsername(req.getRefreshToken());
+		UserDetails userDetails = customUserDetailsService.loadUserByUsername(username);
+		if(userDetails == null) {
+			throw new ResourceNotFoundException("Cannot find user for new access Token generation");
+		}
+		
+		//if user is not banned| if user is enabled
+		if(!userDetails.isEnabled()) {
+			throw new DisabledException("The user is disabled from accessing the system to generate new access Token");
+		}
+		
+		String storedRefreshToken = tokenRepository.getRefreshKeyToken(username);
+		if(storedRefreshToken==null || !storedRefreshToken.equals(req.getRefreshToken())) {
+			throw new InvalidCredentialsException("Invalid Refresh Token");
+		}
+			
+		//get UserDetails from database
+		Authentication auth = new UsernamePasswordAuthenticationToken(userDetails,null,userDetails.getAuthorities());
+		
+		//construct new AccessToken from userDetails
+		String accessToken = jwtUtilities.generateAccessToken(auth);
+		
+		//remove previous accessToken and add new Access Token
+		tokenRepository.removeAccessToken(accessToken);
+		
+		//store new accessToken in redis
+		tokenRepository.storeToken(username, accessToken, storedRefreshToken);
+		
+		//construct RefreshTokenResponse obj
+		RefreshTokenResponse res = new RefreshTokenResponse(accessToken);
+		
+		return res;
+		
+	}
+	
+	
+	public void logout() {
+		UserDetails userDetails = (UserDetails)SecurityContextHolder
+				.getContext().getAuthentication().getPrincipal();
+		tokenRepository.removeAllToken(userDetails.getUsername());
 	}
 
 }

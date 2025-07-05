@@ -3,7 +3,7 @@ package com.QuickBites.app.mapper;
 import org.springframework.stereotype.Component;
 
 import com.QuickBites.app.DTO.CategoryResponseDTO;
-import com.QuickBites.app.DTO.CreateCategoryDTO;
+import com.QuickBites.app.DTO.CreateFoodCategoryDTO;
 import com.QuickBites.app.entities.FoodCategory;
 import com.QuickBites.app.enums.ImageType;
 import com.QuickBites.app.services.ImageService;
@@ -20,7 +20,7 @@ public class FoodCategoryMapper {
 		this.imageService = imageService;
 	}
 
-	public  FoodCategory categoryDTOToEntity(CreateCategoryDTO categoryRequest){
+	public  FoodCategory categoryDTOToEntity(CreateFoodCategoryDTO categoryRequest){
 		FoodCategory foodCategory = new FoodCategory();
 		foodCategory.setName(categoryRequest.getName().trim());
 		foodCategory.setDescription(categoryRequest.getDescription());

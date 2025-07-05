@@ -2,15 +2,16 @@ package com.QuickBites.app.DTO;
 
 import java.math.BigDecimal;
 
-import com.QuickBites.app.entities.FoodItem;
-
-public class FoodVariantResponseDTO {
-	private Long id;
-
+public class UpdateFoodVariantDTO {
+	
 	private String name;
 	
 	private BigDecimal price;
 	
+	private Long foodItemId;
+
+	
+
 	public String getName() {
 		return name;
 	}
@@ -27,14 +28,12 @@ public class FoodVariantResponseDTO {
 		this.price = price;
 	}
 
-
-	public Long getId() {
-		return id;
+	public Long getFoodItemId() {
+		return foodItemId;
 	}
 
-	public void setId(Long id) {
-		this.id = id;
+	public void setFoodItemId(Long foodItemId) {
+		this.foodItemId = foodItemId;
 	}
-	
 	
 }

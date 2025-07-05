@@ -14,4 +14,6 @@ public interface FoodItemRepository extends JpaRepository<FoodItem,Long>{
 		
 		@Query("SELECT f from FoodItem f LEFT JOIN FETCH f.foodVariants")
 		List<FoodItem> findAllWithVariants();
+		
+		boolean existsByCategoryId(Long id);
 }

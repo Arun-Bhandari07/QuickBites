@@ -6,16 +6,44 @@ public class LoginResponse {
 	
 	private int id;
 	private String username;
-	private String token;
-	private Long expiresAt;
+	private String accessToken;
+	private String refreshToken;
+	private Long accessTokenExpiry;
+	private Long refreshTokenExpiry;
 	private Set<String> roles;
 	
-	public Long getExpiresAt() {
-		return expiresAt;
+	public LoginResponse(int id, String username, String accessToken,Long accessTokenExpiry,
+			String refreshToken, Long refreshTokenExpiry) {
+		this.id = id;
+		this.username = username;
+		this.accessToken = accessToken;
+		this.refreshToken = refreshToken;
+		this.accessTokenExpiry = accessTokenExpiry;
+		this.refreshTokenExpiry = refreshTokenExpiry;
+	}
+	
+	public String getAccessToken() {
+		return accessToken;
 	}
 
-	public void setExpiresAt(Long expiresAt) {
-		this.expiresAt = expiresAt;
+	public void setAccessToken(String accessToken) {
+		this.accessToken = accessToken;
+	}
+
+	public String getRefreshToken() {
+		return refreshToken;
+	}
+
+	public void setRefreshToken(String refreshToken) {
+		this.refreshToken = refreshToken;
+	}
+
+	public Long getAccessTokenExpiry() {
+		return accessTokenExpiry;
+	}
+
+	public void setAccessTokenExpiry(Long accessTokenExpiry) {
+		this.accessTokenExpiry = accessTokenExpiry;
 	}
 
 	public Set<String> getRoles() {
@@ -26,13 +54,6 @@ public class LoginResponse {
 		this.roles = roles;
 	}
 
-	public LoginResponse(int id, String username, String token,Long expiresAt) {
-		this.id = id;
-		this.username = username;
-		this.token = token;
-		this.expiresAt = expiresAt;
-	}
-	
 	public int getId() {
 		return id;
 	}
@@ -49,21 +70,15 @@ public class LoginResponse {
 		this.username = username;
 	}
 
-	public String getToken() {
-		return token;
+	public Long getRefreshTokenExpiry() {
+		return refreshTokenExpiry;
 	}
 
-	public void setToken(String token) {
-		this.token = token;
+	public void setRefreshTokenExpiry(Long refreshTokenExpiry) {
+		this.refreshTokenExpiry = refreshTokenExpiry;
 	}
+
 	
-	public Long getTokenExpiration() {
-		return this.expiresAt;
-	}
-	
-	public void setTokenExpiration(Long expirationDate) {
-		this.expiresAt = expirationDate;
-	}
 	
 	
 	

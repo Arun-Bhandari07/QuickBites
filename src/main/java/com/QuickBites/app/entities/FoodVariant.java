@@ -17,7 +17,7 @@ import jakarta.persistence.ManyToOne;
 public class FoodVariant {
 	@Id
 	@GeneratedValue(strategy=GenerationType.IDENTITY)
-	private int id;
+	private Long id;
 	
 	private String name;
 	
@@ -30,7 +30,7 @@ public class FoodVariant {
 	private LocalDateTime updatedAt;
 	
 	@ManyToOne
-	@JoinColumn(name="food_item_id")
+	@JoinColumn(name="food_item_id",nullable=false)
 	private FoodItem foodItem;
 	
 	public FoodItem getFoodItem() {
@@ -41,11 +41,11 @@ public class FoodVariant {
 		this.foodItem = foodItem;
 	}
 
-	public int getId() {
+	public Long getId() {
 		return id;
 	}
 
-	public void setId(int id) {
+	public void setId(Long id) {
 		this.id = id;
 	}
 

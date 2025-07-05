@@ -5,7 +5,7 @@ import org.springframework.web.multipart.MultipartFile;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 
-public class CreateCategoryDTO {
+public class CreateFoodCategoryDTO {
 	
 	@NotBlank(message="Name should be provided")
 	@NotNull(message="Name should not be null")

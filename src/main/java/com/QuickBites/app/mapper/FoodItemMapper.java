@@ -54,6 +54,7 @@ public class FoodItemMapper {
 		responseDTO.setPrice(item.getPrice());
 		responseDTO.setDescription(item.getDescription());
 		responseDTO.setImageUrl(item.getImageUrl());
+		responseDTO.setActive(item.getIsActive());
 		
 		List<FoodVariant> foodVariants = Optional.ofNullable(item.getFoodVariants()).orElse(Collections.emptyList());
 		List<FoodVariantResponseDTO> variantResponseDTO = foodVariants.stream()

@@ -1,11 +1,13 @@
 package com.QuickBites.app.controller;
 
+import java.time.Duration;
 import java.util.Map;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseCookie;
 import org.springframework.http.ResponseEntity;
-import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -17,14 +19,19 @@ import com.QuickBites.app.DTO.ApiResponse;
 import com.QuickBites.app.DTO.CustomerRegisterRequest;
 import com.QuickBites.app.DTO.LoginRequest;
 import com.QuickBites.app.DTO.LoginResponse;
+import com.QuickBites.app.DTO.RefreshTokenRequest;
+import com.QuickBites.app.DTO.RefreshTokenResponse;
 import com.QuickBites.app.services.AuthService;
 import com.QuickBites.app.services.MailService;
 import com.QuickBites.app.services.OTPService;
 
+import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.servlet.http.Cookie;
 import jakarta.validation.Valid;
 
 @RestController
 @RequestMapping("/api/v1/auth")
+@Tag(name="Authentication APIs", description="SignUp, Verify and Login Users")
 public class AuthController {
 
 	@Autowired
@@ -43,7 +50,24 @@ public class AuthController {
 	@PostMapping("/login")
 	public ResponseEntity<?> userLogin(@Valid @RequestBody  LoginRequest loginRequestDTO){
 			ApiResponse<LoginResponse> res = authService.authenticateUser(loginRequestDTO);
-			return ResponseEntity.status(HttpStatus.OK).body(res);
+			String refreshToken = res.getData().getRefreshToken();
+			ResponseCookie refreshCookie = ResponseCookie.from("refreshToken", refreshToken)
+							.httpOnly(true)
+							.secure(false)
+							.path("/api/v1/auth/refresh-token")
+							.maxAge(Duration.ofDays(7))
+							.build();
+			
+			return ResponseEntity.ok()
+					.header(HttpHeaders.SET_COOKIE, refreshCookie.toString())
+					.body(res);
+			
+	}
+	
+	@PostMapping("/logout")
+	public ResponseEntity<?> userLogOut(){
+		authService.logout();
+		return ResponseEntity.ok().body("User logged out successfully");
 	}
 	
 
@@ -89,6 +113,12 @@ public class AuthController {
             return ResponseEntity.ok(new ApiResponse<>("success", "If an account with this email address exists, a password reset OTP has been sent.", null));
     
     }
+	
+	@PostMapping(path="/refresh-token")
+	public ResponseEntity<?> refreshToken(@Valid @RequestBody RefreshTokenRequest req) {
+		RefreshTokenResponse res = authService.refreshToken(req);
+		return ResponseEntity.ok(res);
+	}
 	
 
 }
