@@ -17,8 +17,11 @@ import com.QuickBites.app.DTO.AddToCartRequest;
 import com.QuickBites.app.DTO.CartResponseDTO;
 import com.QuickBites.app.services.CartService;
 
+import io.swagger.v3.oas.annotations.tags.Tag;
+
 @RestController
 @RequestMapping("/api/v1/cart")
+@Tag(name="Cart Operations", description="Add,Update,Remove Items to Cart")
 public class CartController {
 
     private  CartService cartService;

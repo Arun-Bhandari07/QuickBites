@@ -11,13 +11,17 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.QuickBites.app.DTO.OrderResponseDTO;
 import com.QuickBites.app.DTO.PlaceOrderRequestDTO;
 import com.QuickBites.app.DTO.PlaceOrderResponse;
 import com.QuickBites.app.entities.Order;
 import com.QuickBites.app.services.OrderService;
 
+import io.swagger.v3.oas.annotations.tags.Tag;
+
 @RestController
 @RequestMapping("/api/v1/orders")
+@Tag(name="Order" ,description="Place and Get Orders")
 public class OrderController {
 
     private final OrderService orderService;
@@ -36,12 +40,11 @@ public class OrderController {
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<Order> getOrderById(
-            @PathVariable Long id,
-            Authentication authentication) {
-        String username = authentication.getName();
+    public ResponseEntity<OrderResponseDTO> getOrderById(@PathVariable("id") Long id, Authentication auth) {
+        String username = auth.getName();
         Order order = orderService.getOrderByIdForUser(id, username);
-        return ResponseEntity.ok(order);
+        OrderResponseDTO dto = orderService.convertToResponseDTO(order);
+        return ResponseEntity.ok(dto);
     }
 
     @GetMapping

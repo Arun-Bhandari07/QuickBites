@@ -4,12 +4,15 @@ import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
 
 import com.QuickBites.app.DTO.CartItemRequestDTO;
+import com.QuickBites.app.DTO.OrderItemResponseDTO;
+import com.QuickBites.app.DTO.OrderResponseDTO;
 import com.QuickBites.app.DTO.PlaceOrderRequestDTO;
 import com.QuickBites.app.DTO.PlaceOrderResponse;
 import com.QuickBites.app.Exception.ResourceNotFoundException;
@@ -128,6 +131,30 @@ public class OrderService {
     
     public List<Order> getOrdersForUser(String username) {
         return orderRepo.findByUserUserName(username);
+    }
+    
+    
+    public OrderResponseDTO convertToResponseDTO(Order order) {
+        List<OrderItemResponseDTO> itemDTOs = order.getItems().stream().map(item -> {
+            String foodName = item.getFoodItem().getName();
+            String variantName = item.getVariant() != null ? item.getVariant().getName() : null;
+
+            return new OrderItemResponseDTO(
+                item.getId(),
+                foodName,
+                variantName,
+                item.getQuantity(),
+                item.getPriceAtPurchase()
+            );
+        }).collect(Collectors.toList());
+
+        return new OrderResponseDTO(
+            order.getId(),
+            order.getTotalAmount(),
+            order.getStatus().name(),
+            order.getCreatedAt(),
+            itemDTOs
+        );
     }
     
 }

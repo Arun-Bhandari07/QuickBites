@@ -17,10 +17,12 @@ import com.stripe.model.Event;
 import com.stripe.model.PaymentIntent;
 import com.stripe.net.Webhook;
 
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.servlet.http.HttpServletRequest;
 
 @RestController
 @RequestMapping("/api/v1/stripe")
+@Tag(name="Stripe WebHook API")
 public class StripeWebhookController {
 
     private  OrderRepository orderRepo;
