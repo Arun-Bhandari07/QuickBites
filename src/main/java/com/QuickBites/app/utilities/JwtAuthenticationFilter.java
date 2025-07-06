@@ -54,6 +54,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
     	   String storedToken = tokenRepository.getAccessKeyToken(username);
         if(storedToken == null || !storedToken.equals(token)) {
         	filterChain.doFilter(request, response);
+        	return;
         }
        }
         
@@ -62,7 +63,8 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         if (username != null && SecurityContextHolder.getContext().getAuthentication() == null) {
             UserDetails userDetails = userDetailsService.loadUserByUsername(username);
 
-            if (jwtUtils.isValidToken(token,userDetails)) {
+            if (jwtUtils.isValidToken(token,userDetails)
+            		&& !tokenRepository.isAccessTokenBlackListed(token)) {
                 UsernamePasswordAuthenticationToken authToken =
                     new UsernamePasswordAuthenticationToken(
                         userDetails, null, userDetails.getAuthorities()

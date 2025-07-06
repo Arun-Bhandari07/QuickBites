@@ -9,7 +9,6 @@ import org.springframework.http.HttpMethod;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.AuthenticationProvider;
 import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
-import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
@@ -33,7 +32,13 @@ public class SecurityConfig {
 	 private CustomUserDetailsService customUserDetailsService;
 	
 	@Autowired
+	private CustomAccessDeniedHandler customAccessDeniedHandler;
+	
+	@Autowired
 	private  JwtAuthenticationFilter jwtAuthenticationFilter;
+	
+	@Autowired
+	private JwtAuthEntryPoint jwtAuthEntryPoint;
 
 	 public  SecurityConfig() {}
 	 
@@ -50,6 +55,7 @@ public class SecurityConfig {
 						.requestMatchers("/api/v1/auth/**").permitAll()
 						.requestMatchers("/api/v1/admin/**").hasRole("ADMIN")
 						.anyRequest().authenticated())
+				.exceptionHandling(ex->ex.authenticationEntryPoint(jwtAuthEntryPoint).accessDeniedHandler(customAccessDeniedHandler))
 				.formLogin(form->form.disable())
 				.sessionManagement(session->session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
 				.authenticationProvider(authenticationProvider())
@@ -61,7 +67,7 @@ public class SecurityConfig {
 	@Bean
 	public  CorsConfigurationSource corsConfigurationSource() {
 		CorsConfiguration config = new CorsConfiguration();
-		config.setAllowedOrigins(List.of("https://d5f9-103-167-232-191.ngrok-free.app","http://localhost:3000","http://127.0.0.1:5500"));
+		config.setAllowedOrigins(List.of("https://d5f9-103-167-232-191.ngrok-free.app","http://localhost:3000","http://127.0.0.1:5500","https://8e9f-103-167-232-13.ngrok-free.app"));
 		config.setAllowedMethods(List.of("GET","POST","PUT","DELETE","OPTIONS"));
 		config.setAllowedHeaders(List.of("*"));
 		config.setAllowCredentials(true);

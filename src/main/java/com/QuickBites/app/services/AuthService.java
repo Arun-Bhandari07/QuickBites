@@ -215,7 +215,7 @@ public class AuthService {
 		String accessToken = jwtUtilities.generateAccessToken(auth);
 		
 		//remove previous accessToken and add new Access Token
-		tokenRepository.removeAccessToken(accessToken);
+		tokenRepository.removeAccessToken(username);
 		
 		//store new accessToken in redis
 		tokenRepository.storeToken(username, accessToken, storedRefreshToken);
@@ -229,8 +229,16 @@ public class AuthService {
 	
 	
 	public void logout() {
-		UserDetails userDetails = (UserDetails)SecurityContextHolder
-				.getContext().getAuthentication().getPrincipal();
+		Authentication authentication = SecurityContextHolder
+				.getContext().getAuthentication();
+		if(authentication==null || !authentication.isAuthenticated()) {
+		    throw new IllegalStateException("No authenticated user found for logout.");
+		}
+		Object principal = authentication.getPrincipal();
+		if (!(principal instanceof UserDetails)) {
+		    throw new IllegalStateException("Principal is not an instance of UserDetails.");
+		}
+		UserDetails userDetails = (UserDetails) principal;
 		tokenRepository.removeAllToken(userDetails.getUsername());
 	}
 
