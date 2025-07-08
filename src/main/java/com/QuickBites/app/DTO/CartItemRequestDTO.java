@@ -1,9 +1,18 @@
 package com.QuickBites.app.DTO;
+
+import jakarta.validation.constraints.Min;
+import jakarta.validation.constraints.NotNull;
+
 //Class to get the final Order request from frontend 
 public class CartItemRequestDTO {
 
-	 private Long foodItemId;
-	    private Long variantId; // nullable
+		@NotNull(message="Food item ID is required")
+	 	private Long foodItemId;
+		
+	    @NotNull(message = "Variant ID is required")
+	    private Long variantId; 
+	    
+	    @Min(value = 1, message = "Quantity must be at least 1")
 	    private int quantity;
 	    
 		public Long getFoodItemId() {

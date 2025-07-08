@@ -18,6 +18,7 @@ import com.QuickBites.app.entities.Order;
 import com.QuickBites.app.services.OrderService;
 
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.validation.Valid;
 
 @RestController
 @RequestMapping("/api/v1/orders")
@@ -31,7 +32,7 @@ public class OrderController {
     }
 
     @PostMapping("/place")
-    public ResponseEntity<PlaceOrderResponse> placeOrder(
+    public ResponseEntity<PlaceOrderResponse> placeOrder(@Valid
             @RequestBody PlaceOrderRequestDTO request,
             Authentication authentication) {
         String username = authentication.getName();

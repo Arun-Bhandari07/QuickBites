@@ -93,7 +93,7 @@ public class OrderService {
         // 3. Create Order
         Order order = new Order();
         order.setUser(user);
-        order.setStatus(OrderStatus.PAID);
+        order.setStatus(OrderStatus.PENDING_PAYMENT);
         order.setTotalAmount(totalAmount);
         order.setItems(orderItems); // will be saved cascade
 
