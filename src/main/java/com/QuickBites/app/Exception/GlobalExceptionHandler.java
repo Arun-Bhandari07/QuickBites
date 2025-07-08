@@ -31,13 +31,13 @@ public class GlobalExceptionHandler{
 			String fieldName = ((FieldError) error).getField();
 			String errorMessage = error.getDefaultMessage();
 			fieldError.put(fieldName, errorMessage);
-		});;
+		});
 		String path = req.getDescription(false).substring(4);
 		ApiErrorResponse res = new ApiErrorResponse(
 				"Invalid field input"
 				,HttpStatus.BAD_REQUEST.value()
 				,path
-				,"Please fill out all fields properly"
+				,"INVALID_FIELD_INPUT"
 				,fieldError
 				);		
 		return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(res);	

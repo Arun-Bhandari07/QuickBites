@@ -48,8 +48,8 @@ public class FileService {
 			if(!Files.exists(tempUploadPath)) {
 			Files.createDirectories(tempUploadPath);
 		}
-		Path filePath = tempUploadPath.resolve(fileName);
-		if(!filePath.normalize().startsWith(tempUploadPath.normalize())) {
+		Path filePath = tempUploadPath.resolve(fileName).normalize().toAbsolutePath();
+		if(!filePath.normalize().startsWith(tempUploadPath.normalize().toAbsolutePath())) {
 			throw new InvalidFileException("File path cannot be resolved");
 		}
 		Files.copy(file.getInputStream(),filePath,StandardCopyOption.REPLACE_EXISTING);

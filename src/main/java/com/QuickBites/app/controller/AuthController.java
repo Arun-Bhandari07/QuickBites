@@ -26,7 +26,6 @@ import com.QuickBites.app.services.MailService;
 import com.QuickBites.app.services.OTPService;
 
 import io.swagger.v3.oas.annotations.tags.Tag;
-import jakarta.servlet.http.Cookie;
 import jakarta.validation.Valid;
 
 @RestController

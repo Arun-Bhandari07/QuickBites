@@ -34,11 +34,15 @@ public class StripeWebhookController {
     	this.orderRepo = orderRepo;
     }
 
+    
+    
     @PostMapping("/webhook")
     public ResponseEntity<String> handleStripeWebhook(HttpServletRequest request) throws IOException {
         String payload = request.getReader().lines().collect(Collectors.joining());
         String sigHeader = request.getHeader("Stripe-Signature");
-
+        
+        System.out.println("🎯 Stripe webhook hit: "+payload );
+        
         Event event;
         try {
             event = Webhook.constructEvent(
@@ -55,18 +59,29 @@ public class StripeWebhookController {
             PaymentIntent intent = (PaymentIntent) event.getDataObjectDeserializer()
                     .getObject()
                     .orElse(null);
-
+            	
+            if (intent == null) {
+                System.out.println("Could not deserialize PaymentIntent");
+                return ResponseEntity.ok("Ignored");
+            }
+            
+            
             if (intent != null && intent.getMetadata() != null) {
                 String orderIdStr = intent.getMetadata().get("orderId");
-                Long orderId = Long.parseLong(orderIdStr);
-
-                orderRepo.findById(orderId).ifPresent(order -> {
-                    order.setStatus(OrderStatus.PAID);
-                    orderRepo.save(order);
-                });
+                
+                if (orderIdStr != null) {
+                    Long orderId = Long.parseLong(orderIdStr);
+                    
+                    orderRepo.findById(orderId).ifPresent(order -> {
+                        order.setStatus(OrderStatus.PAID);
+                        orderRepo.save(order);
+                    });
+                } else {
+                    System.out.println(" Missing orderId in metadata");
+                }
             }
         }
-
+        System.out.println(" Webhook processed successfully");
         return ResponseEntity.ok("Webhook handled");
     }
 }

@@ -48,9 +48,14 @@ public class OrderController {
     }
 
     @GetMapping
-    public ResponseEntity<List<Order>> getOrdersForUser(Authentication authentication) {
-        String username = authentication.getName();
+    public ResponseEntity<List<OrderResponseDTO>> getOrdersForUser(Authentication authentication) {
+    	String username = authentication.getName();
         List<Order> orders = orderService.getOrdersForUser(username);
-        return ResponseEntity.ok(orders);
+
+        List<OrderResponseDTO> dtoList = orders.stream()
+            .map(orderService::convertToResponseDTO)
+            .toList();
+
+        return ResponseEntity.ok(dtoList);
     }
 }

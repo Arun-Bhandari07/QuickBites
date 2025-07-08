@@ -108,8 +108,6 @@ public class UserRegistrationService {
 		user.setEmail(pendingUser.getEmail());
 		user.setPassword(pendingUser.getPassword());
 		user.setCreatedAt(pendingUser.getCreatedAt());
-		user.setPhone(pendingUser.getPhone());
-		user.setAddress(pendingUser.getAddress());
 		return user;
 	}
 	

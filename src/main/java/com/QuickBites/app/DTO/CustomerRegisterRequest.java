@@ -1,44 +1,35 @@
 package com.QuickBites.app.DTO;
 
+import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Size;
 
 	public class CustomerRegisterRequest {
 		
-		public CustomerRegisterRequest() {
-			
-		}
+		public CustomerRegisterRequest() {}
 		
 		@NotBlank(message="Firstname should be filled")
+		@Pattern(regexp = "^[A-Za-z]{2,}$", message = "Firstname must contain only letters and be at least 2 characters")
 		private String firstName;
 		
 		@NotBlank(message="Lastname should be filled")
+		@Pattern(regexp = "^[A-Za-z]{2,}$", message = "Lastname must contain only letters and be at least 2 characters")
 		private String lastName;
 		
-		@NotBlank
-		@Size(min=3, message="Username must at least 3 characters")
+		@NotBlank(message="Username must not be blank")
+		@Size(min=3, message="Username must be at least 3 characters")
 		private String userName;
 		
 		@NotBlank(message="Password must not be empty")
-		@Size(min=6, message="Password must be at least 6 characters")
+		@Size(min=8, message="Password must be at least 8 characters")
 		private String password;
 		
 		@NotBlank(message="Password must not be empty")
+		@Email(message = "Invalid email format")
 		private String email;
 		
-		private String phone;
-		
-		@NotBlank(message="Password must not be empty")
-		private String address;
-		
-		public String getPhone() {
-			return phone;
-		}
-
-		public void setPhone(String phone) {
-			this.phone = phone;
-		}
-		
+	
 	public String getFirstName() {
 		return firstName;
 	}
@@ -71,13 +62,6 @@ import jakarta.validation.constraints.Size;
 		this.password = password;
 	}
 
-	public String getAddress() {
-		return address;
-	}
-
-	public void setAddress(String address) {
-		this.address = address;
-	}
 	public String getEmail() {
 		return email;
 	}

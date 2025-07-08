@@ -1,5 +1,6 @@
 package com.QuickBites.app.entities;
 
+import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
@@ -13,8 +14,14 @@ public class DeliveryAgent {
 	@Id
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
 	private int id;
+	
+	@Column(nullable=false)
 	private String citizenshipPhotoFront;
+	
+	@Column(nullable=false)
 	private String citizenshipPhotoBack;
+	
+	@Column(nullable=false)
 	private String drivingLicense;
 	
 	@OneToOne
@@ -33,8 +40,6 @@ public class DeliveryAgent {
 	public void setCitizenshipPhotoBack(String citizenshipPhotoBack) {
 		this.citizenshipPhotoBack = citizenshipPhotoBack;
 	}
-	
-	
 	
 	
 	public User getUser() {

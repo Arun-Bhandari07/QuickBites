@@ -47,9 +47,10 @@ public class User {
 	@NotBlank
 	private String email;
 	
-	@Column(unique=true)
+	@Column(unique=true, nullable=true)
 	private String phone;
 	
+	@Column(nullable=true)
 	private String address;
 	
 	

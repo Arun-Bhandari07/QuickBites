@@ -28,18 +28,21 @@ public PendingUser() {}
 	@Column(updatable=false)
 	private int id;
 
+	@Column(nullable=false)
 	private String firstName;
+	
+	@Column(nullable=false)
 	private String lastName;
 	
+	@Column(nullable=false)
 	private String userName;
+	
+	@Column(nullable=false)
 	private String password;
 	
+	@Column(nullable=false)
 	private String email;
 
-	private String phone;
-	
-	private String address;
-	
 	private String citizenshipPhotoFront;
 	
 	private String citizenshipPhotoBack;
@@ -153,13 +156,6 @@ public PendingUser() {}
 		this.email = email;
 	}
 
-	public String getPhone() {
-		return phone;
-	}
-
-	public void setPhone(String phone) {
-		this.phone = phone;
-	}
 
 	public LocalDateTime getCreatedAt() {
 		return createdAt;
@@ -167,14 +163,6 @@ public PendingUser() {}
 
 	public void setCreatedAt(LocalDateTime createdAt) {
 		this.createdAt = createdAt;
-	}
-	
-	public String getAddress() {
-		return this.address;
-	}
-	
-	public void setAddress(String address) {
-		this.address  = address;
 	}
 
 	public boolean isAdminApproved() {

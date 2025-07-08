@@ -1,9 +1,12 @@
 package com.QuickBites.app.services;
 
+import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.BadCredentialsException;
@@ -14,6 +17,7 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Service;
 
+import com.QuickBites.app.UserExistence;
 import com.QuickBites.app.DTO.AgentRegisterRequest;
 import com.QuickBites.app.DTO.ApiResponse;
 import com.QuickBites.app.DTO.CustomerRegisterRequest;
@@ -21,12 +25,12 @@ import com.QuickBites.app.DTO.LoginRequest;
 import com.QuickBites.app.DTO.LoginResponse;
 import com.QuickBites.app.DTO.RefreshTokenRequest;
 import com.QuickBites.app.DTO.RefreshTokenResponse;
+import com.QuickBites.app.Exception.FileHandlingException;
 import com.QuickBites.app.Exception.FileStorageException;
 import com.QuickBites.app.Exception.InvalidCredentialsException;
 import com.QuickBites.app.Exception.ResourceAlreadyExistsException;
 import com.QuickBites.app.Exception.ResourceNotFoundException;
 import com.QuickBites.app.Exception.UserNotFoundException;
-import com.QuickBites.app.Exception.UserVerificationException;
 import com.QuickBites.app.configurations.SecurityConfig;
 import com.QuickBites.app.entities.PendingUser;
 import com.QuickBites.app.entities.User;
@@ -40,6 +44,8 @@ import com.QuickBites.app.utilities.JWTUtilities;
 
 @Service
 public class AuthService {
+	
+	private static final Logger logger = LoggerFactory.getLogger(AuthService.class);
 	JWTUtilities jwtUtilities;
 
 	private final FileService fileService;
@@ -112,22 +118,33 @@ public class AuthService {
 	}
 
 	public void registerPendingUser(CustomerRegisterRequest req) {
-		if (userRepo.existsByUserName(req.getUserName()) || (userRepo.existsByEmail(req.getEmail()))) {
-			throw new ResourceAlreadyExistsException("Username already Taken"+req.getUserName());
+		List<UserExistence> pendingConflicts = pendingUserRepo.findConflicts(req.getUserName(), req.getEmail());
+		for (UserExistence conflict : pendingConflicts) {
+		    if (req.getUserName().equals(conflict.getUserName())) {
+		        throw new ResourceAlreadyExistsException("Username in registration process: " + req.getUserName());
+		    }
+		    if (req.getEmail().equals(conflict.getEmail())) {
+		        throw new ResourceAlreadyExistsException("Email in registration process: " + req.getEmail());
+		    }
 		}
-
-		if (pendingUserRepo.existsByEmail(req.getEmail())) {
-			throw new UserVerificationException("User verification in progress"+req.getEmail());
+		
+		List<UserExistence> userConflicts = userRepo.findConflicts(req.getUserName(), req.getEmail());
+		for (UserExistence conflict : userConflicts) {
+		    if (req.getUserName().equals(conflict.getUserName())) {
+		        throw new ResourceAlreadyExistsException("Username already taken: " + req.getUserName());
+		    }
+		    if (req.getEmail().equals(conflict.getEmail())) {
+		        throw new ResourceAlreadyExistsException("Email already registered: " + req.getEmail());
+		    }
 		}
+	
 
 		PendingUser user = new PendingUser(); // saves a temporary user before verifying otp
 		user.setFirstName(req.getFirstName());
 		user.setLastName(req.getLastName());
 		user.setUserName(req.getUserName());
 		user.setPassword(config.passwordEncoder().encode(req.getPassword()));
-		user.setAddress(req.getAddress());
 		user.setEmail(req.getEmail());
-		user.setPhone(req.getPhone());
 		user.setRoleName(RoleName.ROLE_CUSTOMER);
 
 		if (req instanceof AgentRegisterRequest) { // check if the received req is of customer or agent dto
@@ -139,7 +156,8 @@ public class AuthService {
 				citizenshipPathFront = fileService.saveFile(agentReq.getCitizenshipPhotoFront());
 				citizenshipPathBack = fileService.saveFile(agentReq.getCitizenshipPhotoBack());
 				licensePath = fileService.saveFile(agentReq.getDrivingLicense());
-			}catch(Exception ex) {
+			}catch(FileHandlingException ex) {
+				logger.warn(ex.getMessage());
 				throw new FileStorageException("Problem with storing File",ex);
 			}
 				
