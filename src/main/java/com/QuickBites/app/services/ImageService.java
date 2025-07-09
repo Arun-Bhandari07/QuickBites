@@ -90,6 +90,10 @@ public class ImageService {
 			path = path.resolve("FoodCategoryImages");
 		}else if(imageType.equals(ImageType.FOOD_ITEM)) {
 			path = path.resolve("FoodItemImages");
+		}else if(imageType.equals(ImageType.DELIVERYAGENT)) {
+			path= path.resolve("deliveryAgentImages");
+		}else if(imageType.equals(ImageType.DELIVERYAGENTREQUEST)) {
+			path = path.resolve("deliveryAgentRequestImages");
 		}
 		path = path.resolve(imageName).normalize().toAbsolutePath();
 		try {

@@ -6,7 +6,10 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import com.QuickBites.app.entities.Order;
+import com.QuickBites.app.entities.OrderItem;
 import com.stripe.Stripe;
+import com.stripe.exception.StripeException;
+import com.stripe.model.checkout.Session;
 import com.stripe.param.checkout.SessionCreateParams;
 
 import jakarta.annotation.PostConstruct;
@@ -28,19 +31,48 @@ public class StripeService {
 		 Stripe.apiKey = stripeSecretKey;
 	}
 	
-	
-	public void makePayment(Order order) {
+	public String makePayment(Order order) {
 		Long orderId = order.getId();
-		//convert the currency to smallestUnit
-		BigDecimal totalAmount = order.getTotalAmount();
-		Long totalAmountInCents = totalAmount.multiply(BigDecimal.valueOf(100)).longValue();
 		
 		SessionCreateParams.Builder builder = SessionCreateParams.builder()
-						.setMode(SessionCreateParams.Mode.PAYMENT)
-						.setSuccessUrl(stripeSuccessUrl+orderId)
-						.setCancelUrl(stripeFailureUrl+orderId);
+				.setMode(SessionCreateParams.Mode.PAYMENT)
+				.setSuccessUrl(stripeSuccessUrl+orderId)
+				.setCancelUrl(stripeFailureUrl+orderId);
 		
 		
+		for(OrderItem item:order.getItems()) {
+			Long totalAmountInPaisa = item.getPriceAtPurchase()
+					.multiply(BigDecimal.valueOf(100)).longValue();
+			
+			SessionCreateParams.LineItem lineItem =SessionCreateParams.LineItem.builder()
+						.setQuantity((long)item.getQuantity())
+						.setPriceData(
+								SessionCreateParams.LineItem.PriceData.builder()
+										.setCurrency("npr")
+										.setUnitAmount(totalAmountInPaisa)
+										.setProductData(
+												SessionCreateParams.LineItem.PriceData.ProductData.builder()
+													.setName(item.getFoodItem().getName())
+													.build()
+														)
+											.build()
+										)
+						.build();
+						
+			builder.addLineItem(lineItem);
+		}
+		
+		builder.putMetadata("orderId", order.getId().toString());
+		
+		SessionCreateParams params = builder.build();
+		try {
+			Session session = Session.create(params);
+			return session.getUrl();
+		}catch(StripeException ex) {
+			System.err.println("Error creating Stripe Checkout Session for order " + orderId + ": " + ex.getMessage());
+            ex.printStackTrace();
+            return null;
+		}
 		
 	}
 	

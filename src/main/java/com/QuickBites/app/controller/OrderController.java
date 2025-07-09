@@ -1,7 +1,9 @@
 package com.QuickBites.app.controller;
 
 import java.util.List;
+import java.util.Map;
 
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -51,12 +53,19 @@ public class OrderController {
     @GetMapping
     public ResponseEntity<List<OrderResponseDTO>> getOrdersForUser(Authentication authentication) {
     	String username = authentication.getName();
-        List<Order> orders = orderService.getOrdersForUser(username);
-
-        List<OrderResponseDTO> dtoList = orders.stream()
-            .map(orderService::convertToResponseDTO)
-            .toList();
-
+    	List<OrderResponseDTO> dtoList = orderService.getOrdersForUser(username);
         return ResponseEntity.ok(dtoList);
     }
+    
+    
+    @PostMapping("/{orderId}/retry-checkout")
+    public ResponseEntity<?> retryPayment(@PathVariable Long orderId) {
+        try {
+            String stripeUrl = orderService.retryCheckout(orderId);
+            return ResponseEntity.ok(Map.of("stripeUrl", stripeUrl));
+        } catch (Exception ex) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of("error", ex.getMessage()));
+        }
+    }
+
 }

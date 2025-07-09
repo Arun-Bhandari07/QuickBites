@@ -3,12 +3,12 @@ package com.QuickBites.app.DTO;
 //This DTO is to show the profile info of the user to him/her
 
 public class UserProfileDTO {
-private String username;
-private String firstName;
-private String lastName;
-private String email;
-private String phone;
-private String address;
+	private String username;
+	private String firstName;
+	private String lastName;
+	private String email;
+	private String phone;
+	private String address;
 
 public String getUsername() {
 	return username;

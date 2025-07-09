@@ -8,8 +8,8 @@ import org.springframework.stereotype.Service;
 import com.QuickBites.app.Exception.FileStorageException;
 import com.QuickBites.app.Exception.OtpValidationException;
 import com.QuickBites.app.Exception.RegistrationException;
-import com.QuickBites.app.Exception.ResourceNotFoundException;
 import com.QuickBites.app.Exception.ResourceAlreadyExistsException;
+import com.QuickBites.app.Exception.ResourceNotFoundException;
 import com.QuickBites.app.entities.DeliveryAgent;
 import com.QuickBites.app.entities.PendingUser;
 import com.QuickBites.app.entities.User;
@@ -68,7 +68,12 @@ public class UserRegistrationService {
 		PendingUser pendingUser = validatePendingUser(email);
 		
 		if(!pendingUser.isAdminApproved() || !pendingUser.isOTPVerified()) {
-			throw new RegistrationException("Cannot register agent: The user has not been approved by an admin or has not completed OTP verification.");		}
+			throw new RegistrationException("Cannot register agent: The user has not been approved by an admin or has not completed OTP verification.");	
+			}
+		
+		if (userRepo.existsByEmail(email)) {
+		    throw new ResourceAlreadyExistsException("Delivery agent already registered");
+		}
 		
 		User user = populateUser(pendingUser);
 		try {
@@ -107,7 +112,7 @@ public class UserRegistrationService {
 		user.setUserName(pendingUser.getUserName());
 		user.setEmail(pendingUser.getEmail());
 		user.setPassword(pendingUser.getPassword());
-		user.setCreatedAt(pendingUser.getCreatedAt());
+//		user.setCreatedAt(pendingUser.getCreatedAt());
 		return user;
 	}
 	

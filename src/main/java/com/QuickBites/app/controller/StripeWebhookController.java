@@ -1,7 +1,7 @@
 package com.QuickBites.app.controller;
 
 import java.io.IOException;
-import java.util.stream.Collectors;
+import java.util.Scanner;
 
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
@@ -10,11 +10,12 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.QuickBites.app.entities.Order;
 import com.QuickBites.app.enums.OrderStatus;
 import com.QuickBites.app.repositories.OrderRepository;
 import com.stripe.exception.SignatureVerificationException;
 import com.stripe.model.Event;
-import com.stripe.model.PaymentIntent;
+import com.stripe.model.checkout.Session;
 import com.stripe.net.Webhook;
 
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -34,55 +35,49 @@ public class StripeWebhookController {
     	this.orderRepo = orderRepo;
     }
 
-    
-    
     @PostMapping("/webhook")
     public ResponseEntity<String> handleStripeWebhook(HttpServletRequest request) throws IOException {
-        String payload = request.getReader().lines().collect(Collectors.joining());
-        String sigHeader = request.getHeader("Stripe-Signature");
-        
-        System.out.println("🎯 Stripe webhook hit: "+payload );
-        
-        Event event;
-        try {
-            event = Webhook.constructEvent(
-                    payload,
-                    sigHeader,
-                    stripeWebhookSecret
-            );
-        } catch (SignatureVerificationException e) {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Invalid signature");
-        }
-
-        // Only care about payment success
-        if ("payment_intent.succeeded".equals(event.getType())) {
-            PaymentIntent intent = (PaymentIntent) event.getDataObjectDeserializer()
-                    .getObject()
-                    .orElse(null);
-            	
-            if (intent == null) {
-                System.out.println("Could not deserialize PaymentIntent");
-                return ResponseEntity.ok("Ignored");
-            }
-            
-            
-            if (intent != null && intent.getMetadata() != null) {
-                String orderIdStr = intent.getMetadata().get("orderId");
-                
-                if (orderIdStr != null) {
-                    Long orderId = Long.parseLong(orderIdStr);
-                    
-                    orderRepo.findById(orderId).ifPresent(order -> {
-                        order.setStatus(OrderStatus.PAID);
-                        orderRepo.save(order);
-                    });
-                } else {
-                    System.out.println(" Missing orderId in metadata");
-                }
-            }
-        }
-        System.out.println(" Webhook processed successfully");
-        return ResponseEntity.ok("Webhook handled");
+    	String payload;
+    	
+    	//Extract signature header from request
+    	String sigHeader = request.getHeader("Stripe-Signature");
+    	
+    	//read the payload with scanner try-with resource
+    	try(Scanner scanner = new Scanner(request.getInputStream()).useDelimiter("\\A")){
+    		payload = scanner.hasNext() ? scanner.next() : "";	
+    	}catch(IOException ex) {
+    		return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Failed to read  payload");
+    	}
+    	
+    	Event event;
+    	
+    	//verify if the incoming request comes from stripe with payload,signature and secretKey
+    	try {
+    		event = Webhook.constructEvent(payload, sigHeader, stripeWebhookSecret);
+    	}catch(SignatureVerificationException ex) {
+    		return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Invalid Signature");
+    	}
+    	
+    	//check the status of payment and update order status
+    	if("checkout.session.completed".equals(event.getType())) {
+    		Session session = (Session) event.getDataObjectDeserializer()
+    					.getObject()
+    					.orElseThrow(()->new RuntimeException("Failed to deserialize session object"));
+    		
+    		String orderIdStr = session.getMetadata().get("orderId");
+    		if(orderIdStr!=null) {
+    			Long orderId = Long.valueOf(orderIdStr);
+    			Order order = orderRepo.findById(orderId)
+    						.orElse(null);
+    				if(order!=null && order.getStatus()==OrderStatus.PENDING_PAYMENT) {
+    					order.setStatus(OrderStatus.PAID);
+    					orderRepo.save(order);
+    					System.out.println("Order #"+orderId+" marked as PAID");
+    				}
+    		}
+    	}
+    	return ResponseEntity.ok("Webhook Received");
     }
+       
 }
 

@@ -26,7 +26,7 @@ public PendingUser() {}
 	@Id
 	@GeneratedValue(strategy=GenerationType.IDENTITY)
 	@Column(updatable=false)
-	private int id;
+	private Long id;
 
 	@Column(nullable=false)
 	private String firstName;
@@ -54,7 +54,9 @@ public PendingUser() {}
 	
 	
 	@CreationTimestamp
-	private LocalDateTime createdAt;
+	private LocalDateTime registeredAt;
+	
+
 
 	private boolean isOtpVerified;
 	
@@ -62,7 +64,7 @@ public PendingUser() {}
 	
 	@PrePersist
 	public void prePersist() {
-		this.createdAt= LocalDateTime.now();
+		this.registeredAt= LocalDateTime.now();
 		this.isOtpVerified = false;
 		this.setAdminApproved(false);
 		
@@ -107,12 +109,12 @@ public PendingUser() {}
 		this.roleName = roleName;
 	}
 
-	public void setId(int id) {
+	public void setId(Long id) {
 		this.id = id;
 	}
 
 	
-	public int getId() {
+	public Long getId() {
 		return id;
 	}
 
@@ -157,12 +159,12 @@ public PendingUser() {}
 	}
 
 
-	public LocalDateTime getCreatedAt() {
-		return createdAt;
+	public LocalDateTime getRegisteredAt() {
+		return registeredAt;
 	}
 
-	public void setCreatedAt(LocalDateTime createdAt) {
-		this.createdAt = createdAt;
+	public void setRegisteredAt(LocalDateTime createdAt) {
+		this.registeredAt = createdAt;
 	}
 
 	public boolean isAdminApproved() {

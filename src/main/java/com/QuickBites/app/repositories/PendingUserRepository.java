@@ -13,6 +13,13 @@ import com.QuickBites.app.entities.PendingUser;
 public interface PendingUserRepository extends JpaRepository<PendingUser,Integer> {
 	@Query("SELECT p.userName AS userName, p.email AS email FROM PendingUser p WHERE p.userName=:userName OR email=:email")
 	List<UserExistence> findConflicts(@Param("userName")String userName,@Param("email") String email);
-		Optional<PendingUser> findByEmail(String email);
-		boolean existsByEmail(String email);
+	
+	@Query("SELECT p from PendingUser p WHERE p.isAdminApproved=false AND p.roleName=com.QuickBites.app.enums.RoleName.ROLE_DELIVERYAGENT AND p.isOtpVerified = true")
+	List<PendingUser> findByNotAdminApproved();
+	
+	Optional<PendingUser> findByEmail(String email);
+	
+	Optional<PendingUser> findById(Long id);
+	
+	boolean existsByEmail(String email);
 }

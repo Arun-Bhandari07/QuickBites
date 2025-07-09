@@ -11,6 +11,8 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.QuickBites.app.DTO.CategoryResponseDTO;
 import com.QuickBites.app.DTO.FoodItemResponseDTO;
+import com.QuickBites.app.entities.PendingUser;
+import com.QuickBites.app.repositories.PendingUserRepository;
 import com.QuickBites.app.services.FoodCategoryService;
 import com.QuickBites.app.services.FoodItemService;
 
@@ -26,6 +28,9 @@ public class PublicController {
 	
 	@Autowired
 	FoodItemService foodItemService;
+	
+	@Autowired
+	PendingUserRepository pendingUserRepo;
 	
 	
 	@GetMapping("/foodCategories")
@@ -48,6 +53,11 @@ public class PublicController {
 	public ResponseEntity<FoodItemResponseDTO> getFoodItem(@PathVariable("id") Long id){
 		FoodItemResponseDTO foodItem = foodItemService.getFoodItem(id);
 		return ResponseEntity.ok(foodItem);
+	}
+	
+	@GetMapping("/pending-agents")
+	public List<PendingUser> getPendingAgents() {
+		return pendingUserRepo.findByNotAdminApproved();
 	}
 	
 	

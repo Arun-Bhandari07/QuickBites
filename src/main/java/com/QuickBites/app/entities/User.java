@@ -6,6 +6,7 @@ import java.util.HashSet;
 import java.util.Set;
 
 import org.hibernate.annotations.CreationTimestamp;
+import org.hibernate.annotations.UpdateTimestamp;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -56,6 +57,9 @@ public class User {
 	
 	@CreationTimestamp
 	private LocalDateTime createdAt;
+	
+	@UpdateTimestamp
+	private LocalDateTime updatedAt;
 	
 	
 	@ManyToMany(fetch = FetchType.EAGER)
@@ -122,10 +126,6 @@ public class User {
 		return createdAt;
 	}
 
-	public void setCreatedAt(LocalDateTime createdAt) {
-		this.createdAt = createdAt;
-	}
-	
 	public String getAddress() {
 		return this.address;
 	}
@@ -141,7 +141,10 @@ public class User {
 	public void setRoles(Set<UserRole> role) {
 		this.roles = role;
 	}
-	
-	
+
+	public LocalDateTime getUpdatedAt() {
+		return updatedAt;
+	}
+
 	
 }

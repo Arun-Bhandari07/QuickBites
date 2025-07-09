@@ -1,5 +1,8 @@
 package com.QuickBites.app.controller;
 
+import java.util.List;
+import java.util.Map;
+
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -23,6 +26,12 @@ import com.QuickBites.app.DTO.FoodVariantResponseDTO;
 import com.QuickBites.app.DTO.UpdateFoodCategoryDTO;
 import com.QuickBites.app.DTO.UpdateFoodItemDTO;
 import com.QuickBites.app.DTO.UpdateFoodVariantDTO;
+import com.QuickBites.app.Exception.FileStorageException;
+import com.QuickBites.app.Exception.RegistrationException;
+import com.QuickBites.app.Exception.ResourceNotFoundException;
+import com.QuickBites.app.entities.PendingUser;
+import com.QuickBites.app.repositories.PendingUserRepository;
+import com.QuickBites.app.services.DeliveryAgentService;
 import com.QuickBites.app.services.FoodCategoryService;
 import com.QuickBites.app.services.FoodItemService;
 import com.QuickBites.app.services.FoodVariantService;
@@ -38,17 +47,38 @@ public class AdminController {
 	private FoodCategoryService foodCategoryService;
 	private FoodItemService foodItemService;
 	private FoodVariantService foodVariantService;
+	private PendingUserRepository pendingUserRepo;
+	private DeliveryAgentService deliveryAgentService;
 	
 	public AdminController(FoodCategoryService foodCategoryService
 			,FoodItemService foodItemService
-			,FoodVariantService foodVariantService) {
+			,FoodVariantService foodVariantService
+			,PendingUserRepository pendingUserRepo
+			,DeliveryAgentService deliveryAgentService) {
 		this.foodCategoryService=foodCategoryService;
 		this.foodItemService = foodItemService;
 		this.foodVariantService = foodVariantService;
+		this.pendingUserRepo=pendingUserRepo;
+		this.deliveryAgentService=deliveryAgentService;
 	}
 	
-	@GetMapping("/approveUser")
-	public void approveUser() {
+	@GetMapping("/pending-agents")
+	public List<PendingUser> getPendingAgents() {
+		return pendingUserRepo.findByNotAdminApproved();
+	}
+	
+	@PostMapping("/approve-agent/{pendingUserId}")
+	public ResponseEntity<?> approvePendingAgent(@PathVariable(name="pendingUserId") Long id) {
+		 try {
+		        deliveryAgentService.approveAgentById(id);
+		        return ResponseEntity.ok(Map.of("message", "Agent approved successfully"));
+		    } catch (ResourceNotFoundException | RegistrationException | FileStorageException ex) {
+		        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(Map.of("error", ex.getMessage()));
+		    }
+	}
+	
+	@PostMapping("/reject-agent/{pendingUserId}")
+	public void rejectPendingAgent(@PathVariable(name="pendingUserId") Long id) {
 		
 	}
 	

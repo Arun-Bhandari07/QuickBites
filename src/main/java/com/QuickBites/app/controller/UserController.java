@@ -21,10 +21,12 @@ import com.QuickBites.app.DTO.UpdateProfileDTO;
 import com.QuickBites.app.DTO.UserProfileDTO;
 import com.QuickBites.app.services.UserService;
 
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 
 @RestController
 @RequestMapping("/api/v1/user")
+@Tag(name="User Operations" ,description="Get profile detail, update profile")
 public class UserController {
 
 	private final UserService userService;

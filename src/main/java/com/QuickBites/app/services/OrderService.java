@@ -1,13 +1,12 @@
 package com.QuickBites.app.services;
 
 import java.math.BigDecimal;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
 
 import com.QuickBites.app.DTO.CartItemRequestDTO;
@@ -24,103 +23,83 @@ import com.QuickBites.app.entities.User;
 import com.QuickBites.app.enums.OrderStatus;
 import com.QuickBites.app.repositories.FoodItemRepository;
 import com.QuickBites.app.repositories.FoodVariantRepository;
-import com.QuickBites.app.repositories.OrderItemRepository;
 import com.QuickBites.app.repositories.OrderRepository;
 import com.QuickBites.app.repositories.UserRepository;
-import com.stripe.Stripe;
-import com.stripe.exception.StripeException;
-import com.stripe.model.PaymentIntent;
-import com.stripe.param.PaymentIntentCreateParams;
 
 @Service
 public class OrderService {
 
     private final OrderRepository orderRepo;
-    private final OrderItemRepository orderItemRepo;
     private final UserRepository userRepo;
     private final FoodItemRepository foodItemRepo;
     private final FoodVariantRepository foodVariantRepo;
+    private final StripeService stripeService;
 
     
     public OrderService(OrderRepository orderRepo,
-                        OrderItemRepository orderItemRepo,
                         UserRepository userRepo,
                         FoodItemRepository foodItemRepo,
-                        FoodVariantRepository foodVariantRepo) {
+                        FoodVariantRepository foodVariantRepo,
+                        StripeService stripeService) {
         this.orderRepo = orderRepo;
-        this.orderItemRepo = orderItemRepo;
         this.userRepo = userRepo;
         this.foodItemRepo = foodItemRepo;
         this.foodVariantRepo = foodVariantRepo;
+        this.stripeService = stripeService;
     }
 
-    @Value("${stripe.secret.key}")
-    private String stripeSecretKey;
+    public PlaceOrderResponse placeOrder(PlaceOrderRequestDTO req, String username) {
+		//find User to relate the order to particular user
+		User user = userRepo.findByUserName(username)
+				.orElseThrow(()->new ResourceNotFoundException("User doesnt exists"));
+		
+		//Create a real Order entity and set payment status pending
+		Order order = new Order();
+		order.setUser(user);
+		order.setStatus(OrderStatus.PENDING_PAYMENT);
+		order.setCreatedAt(LocalDateTime.now());
+		List<OrderItem> orderItems  = new ArrayList<>();
+		BigDecimal totalAmount = BigDecimal.ZERO;
+		
+		//loop through each cartItemRequest to map to orderItem and store in list
+		for(CartItemRequestDTO cartItem: req.getItems()){
+			FoodItem foodItem = foodItemRepo.findById(cartItem.getFoodItemId())
+			        .orElseThrow(() -> new ResourceNotFoundException("Food item not found"));
 
-    public PlaceOrderResponse placeOrder(PlaceOrderRequestDTO request, String username) {
-        // 1. Fetch User
-        User user = userRepo.findByUserName(username)
-                .orElseThrow(() -> new UsernameNotFoundException("User not found"));
+			    FoodVariant variant = foodVariantRepo.findById(cartItem.getVariantId())
+			        .orElseThrow(() -> new ResourceNotFoundException("Variant not found"));
+			    
+			    BigDecimal price = Optional.ofNullable(variant.getPrice())
+			    	    .orElseThrow(() -> new IllegalStateException("Variant price cannot be null"));
+			    
+			    int quantity = cartItem.getQuantity();
+			    BigDecimal subtotal = price.multiply(BigDecimal.valueOf(quantity));
+			    totalAmount = totalAmount.add(subtotal);
+			    
+			    OrderItem orderItem = new OrderItem();
+			    orderItem.setOrder(order);
+			    orderItem.setFoodItem(foodItem);
+			    orderItem.setVariant(variant);
+			    orderItem.setQuantity(quantity);
+			    orderItem.setPriceAtPurchase(price);
+			   
+			    orderItems.add(orderItem);
+		}
+		
+		//Set the OrderItem list and total Amount in Order Entity
+		order.setItems(orderItems);
+		order.setTotalAmount(totalAmount);
+		
+	//Save order to database
+		Order savedOrder = orderRepo.save(order);
 
-        // 2. Calculate Total and Prepare OrderItems
-        List<OrderItem> orderItems = new ArrayList<>();
-        BigDecimal totalAmount = BigDecimal.ZERO;
-
-        for (CartItemRequestDTO dto : request.getItems()) {
-            FoodItem food = foodItemRepo.findById(dto.getFoodItemId())
-                    .orElseThrow(() -> new ResourceNotFoundException("Food item not found"));
-
-            FoodVariant variant = null;
-            if (dto.getVariantId() != null) {
-                variant = foodVariantRepo.findById(dto.getVariantId())
-                        .orElseThrow(() -> new ResourceNotFoundException("Variant not found"));
-            }
-
-            BigDecimal unitPrice = food.getPrice(); // if variant has price override, apply here
-
-            BigDecimal itemTotal = unitPrice.multiply(BigDecimal.valueOf(dto.getQuantity()));
-            totalAmount = totalAmount.add(itemTotal);
-
-            OrderItem orderItem = new OrderItem();
-            orderItem.setFoodItem(food);
-            orderItem.setVariant(variant);
-            orderItem.setQuantity(dto.getQuantity());
-            orderItem.setPriceAtPurchase(unitPrice);
-
-            orderItems.add(orderItem);
-        }
-
-        // 3. Create Order
-        Order order = new Order();
-        order.setUser(user);
-        order.setStatus(OrderStatus.PENDING_PAYMENT);
-        order.setTotalAmount(totalAmount);
-        order.setItems(orderItems); // will be saved cascade
-
-        orderItems.forEach(item -> item.setOrder(order)); // Set reverse reference
-
-        orderRepo.save(order); // saves everything
-
-        // 4. Create Stripe PaymentIntent
-        Stripe.apiKey = stripeSecretKey;
-
-        long amountInSmallestUnit = totalAmount.multiply(BigDecimal.valueOf(100)).longValue(); // cents / paisa
-
-        PaymentIntentCreateParams params = PaymentIntentCreateParams.builder()
-                .setAmount(amountInSmallestUnit)
-                .setCurrency("usd") // or "npr" or whatever your business uses
-                .putAllMetadata(Map.of("orderId", order.getId().toString()))
-                .build();
-
-        try {
-            PaymentIntent intent = PaymentIntent.create(params);
-            String clientSecret = intent.getClientSecret();
-
-            return new PlaceOrderResponse(order.getId(), totalAmount, clientSecret);
-        } catch (StripeException e) {
-            throw new RuntimeException("Stripe error: " + e.getMessage());
-        }
-    }
+		//call make payment method of stripe Service
+		String stripeUrl = stripeService.makePayment(savedOrder);
+		
+		return new PlaceOrderResponse(savedOrder.getId(),totalAmount, stripeUrl);
+		
+		
+	}
     
     
     public Order getOrderByIdForUser(Long orderId, String username) {
@@ -129,8 +108,12 @@ public class OrderService {
     }
     
     
-    public List<Order> getOrdersForUser(String username) {
-        return orderRepo.findByUserUserName(username);
+    public List<OrderResponseDTO> getOrdersForUser(String username) {
+    	 List<Order> orders= orderRepo.findByUserUserName(username);
+    	 List<OrderResponseDTO> dtoList = orders.stream()
+    	            .map(order->convertToResponseDTO(order))
+    	            .toList();
+    	 return dtoList;
     }
     
     
@@ -156,6 +139,19 @@ public class OrderService {
             itemDTOs
         );
     }
+    
+    
+    public String retryCheckout(Long orderId) {
+        Order order = orderRepo.findById(orderId)
+            .orElseThrow(() -> new ResourceNotFoundException("Order not found"));
+
+        if (order.getStatus() != OrderStatus.PENDING_PAYMENT) {
+            throw new IllegalStateException("Order is already paid or canceled");
+        }
+
+        return stripeService.makePayment(order);
+    }
+
     
 }
 
