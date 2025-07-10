@@ -7,6 +7,7 @@ import java.util.List;
 import org.hibernate.annotations.CreationTimestamp;
 
 import com.QuickBites.app.enums.OrderStatus;
+import com.QuickBites.app.enums.PaymentMethod;
 import com.fasterxml.jackson.annotation.JsonManagedReference;
 
 import jakarta.persistence.CascadeType;
@@ -16,6 +17,7 @@ import jakarta.persistence.Enumerated;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
+import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
@@ -38,10 +40,20 @@ public class Order {
     private BigDecimal totalAmount;
 
     @Enumerated(EnumType.STRING)
-    private OrderStatus status; // PENDING, PAID, FAILED
+    private OrderStatus status; 
 
     @CreationTimestamp
     private LocalDateTime createdAt;
+    
+    @ManyToOne
+    @JoinColumn(name="address_id")
+    private Address deliveryAddress;
+    
+    private String phone;
+    
+    @Enumerated
+    private PaymentMethod paymentMethod;
+    
 
 	public Long getId() {
 		return id;
@@ -91,6 +103,31 @@ public class Order {
 		this.createdAt = createdAt;
 	}
 
+	public Address getDeliveryAddress() {
+		return deliveryAddress;
+	}
+
+	public void setDeliveryAddress(Address deliveryAddress) {
+		this.deliveryAddress = deliveryAddress;
+	}
+
+	public PaymentMethod getPaymentMethod() {
+		return paymentMethod;
+	}
+
+	public void setPaymentMethod(PaymentMethod paymentMethod) {
+		this.paymentMethod = paymentMethod;
+	}
+
+	public String getPhone() {
+		return phone;
+	}
+
+	public void setPhone(String phone) {
+		this.phone = phone;
+	}
+
+	
     
   
 }

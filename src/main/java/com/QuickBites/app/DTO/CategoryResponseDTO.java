@@ -1,7 +1,5 @@
 package com.QuickBites.app.DTO;
 
-import java.time.LocalDateTime;
-
 public class CategoryResponseDTO {
 
 	    private Long id;

@@ -56,8 +56,7 @@ public class OrderController {
     	List<OrderResponseDTO> dtoList = orderService.getOrdersForUser(username);
         return ResponseEntity.ok(dtoList);
     }
-    
-    
+      
     @PostMapping("/{orderId}/retry-checkout")
     public ResponseEntity<?> retryPayment(@PathVariable Long orderId) {
         try {
@@ -67,5 +66,4 @@ public class OrderController {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of("error", ex.getMessage()));
         }
     }
-
 }

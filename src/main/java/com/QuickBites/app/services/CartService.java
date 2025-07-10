@@ -5,11 +5,13 @@ import java.util.List;
 import java.util.Optional;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 
 import com.QuickBites.app.DTO.AddToCartRequest;
 import com.QuickBites.app.DTO.CartItemResponseDTO;
 import com.QuickBites.app.DTO.CartResponseDTO;
+import com.QuickBites.app.DTO.CartUpdateRequest;
 import com.QuickBites.app.Exception.ResourceNotFoundException;
 import com.QuickBites.app.Exception.UserNotFoundException;
 import com.QuickBites.app.entities.Cart;
@@ -56,10 +58,10 @@ public class CartService {
 	
 	
 	
-	public void addItemToCart(AddToCartRequest request, String username) {
+	public CartItemResponseDTO  addItemToCart(AddToCartRequest request, String username) {
 		Cart cart = getCartForUser(username);
 		
-		FoodItem foodItem = foodItemRepo.findById(request.getFoodItemId())
+	FoodItem foodItem = foodItemRepo.findById(request.getFoodItemId())
 							.orElseThrow(()->new ResourceNotFoundException("Food Item doesn't exist to add to cart"));
 	
 	FoodVariant variant = null;
@@ -72,37 +74,62 @@ public class CartService {
             .findByCartIdAndFoodItemIdAndVariantId(cart.getId(), foodItem.getId(),
                     variant != null ? variant.getId() : null);
 
+    CartItem savedItem;
     if (existingItem.isPresent()) {
         CartItem item = existingItem.get();
         item.setQuantity(item.getQuantity() + request.getQuantity());
-        cartItemRepo.save(item);
+        savedItem = cartItemRepo.save(item);
     } else {
         CartItem newItem = new CartItem();
         newItem.setCart(cart);
         newItem.setFoodItem(foodItem);
         newItem.setVariant(variant);
         newItem.setQuantity(request.getQuantity());
-        cartItemRepo.save(newItem);
+        savedItem = cartItemRepo.save(newItem);
     }
-}
-	public void updateItemQuantity(Long cartItemId, int newQuantity) {
-	    CartItem item = cartItemRepo.findById(cartItemId)
-	            .orElseThrow(() -> new ResourceNotFoundException("Cart item not found"));
+    String foodName = savedItem.getFoodItem().getName();
+    String variantName = (savedItem.getVariant() != null) ? savedItem.getVariant().getName() : "Default";
+    BigDecimal unitPrice = savedItem.getFoodItem().getPrice(); // Consider using variant override logic if needed
+    int quantity = savedItem.getQuantity();
+    BigDecimal subtotal = unitPrice.multiply(BigDecimal.valueOf(quantity));
 
-	    if (newQuantity <= 0) {
-	        cartItemRepo.delete(item); // Optional: auto-remove if qty is 0
+    return new CartItemResponseDTO(
+        savedItem.getId(),
+        foodName,
+        variantName,
+        unitPrice,
+        quantity,
+        subtotal
+    );
+    
+    
+}
+	public void updateCartItem(CartUpdateRequest request, String username) {
+	    Cart cart = getCartForUser(username);
+
+	    CartItem item = cartItemRepo.findById(request.getCartItemId())
+	        .orElseThrow(() -> new ResourceNotFoundException("Cart item not found"));
+
+	    if (!item.getCart().getId().equals(cart.getId())) {
+	        throw new AccessDeniedException("Item does not belong to user's cart");
+	    }
+
+	    int quantity = request.getQuantity();
+	    if (quantity <= 0) {
+	        cartItemRepo.delete(item); 
 	    } else {
-	        item.setQuantity(newQuantity);
+	        item.setQuantity(quantity);
 	        cartItemRepo.save(item);
 	    }
 	}
 	
-	public void removeItem(Long cartItemId) {
-	    if (!cartItemRepo.existsById(cartItemId)) {
-	        throw new ResourceNotFoundException("Cart item not found");
-	    }
-	    cartItemRepo.deleteById(cartItemId);
+	public void removeItem(Long cartItemId, String username) {
+	    CartItem item = cartItemRepo.findByIdAndCartUserUserName(cartItemId, username)
+	        .orElseThrow(() -> new AccessDeniedException("Item not found in your cart"));
+
+	    cartItemRepo.delete(item);
 	}
+	
 	public void clearCart(String username) {
 	    Cart cart = cartRepo.findByUserUserName(username)
 	            .orElseThrow(() -> new ResourceNotFoundException("Cart not found"));

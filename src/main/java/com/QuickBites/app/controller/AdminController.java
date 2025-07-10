@@ -17,6 +17,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.QuickBites.app.DTO.AgentRejectionRequest;
 import com.QuickBites.app.DTO.CategoryResponseDTO;
 import com.QuickBites.app.DTO.CreateFoodCategoryDTO;
 import com.QuickBites.app.DTO.CreateFoodItemDTO;
@@ -78,8 +79,15 @@ public class AdminController {
 	}
 	
 	@PostMapping("/reject-agent/{pendingUserId}")
-	public void rejectPendingAgent(@PathVariable(name="pendingUserId") Long id) {
-		
+	public ResponseEntity<?> rejectPendingAgent(
+	        @PathVariable Long pendingUserId,
+	        @RequestBody AgentRejectionRequest rejectionRequest) {
+	    try {
+	        deliveryAgentService.rejectAgentById(pendingUserId, rejectionRequest.getReason());
+	        return ResponseEntity.ok(Map.of("message", "Agent rejected successfully"));
+	    } catch (ResourceNotFoundException | FileStorageException ex) {
+	        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(Map.of("error", ex.getMessage()));
+	    }
 	}
 	
 	@PostMapping(path="/addFoodCategory",consumes=MediaType.MULTIPART_FORM_DATA_VALUE)

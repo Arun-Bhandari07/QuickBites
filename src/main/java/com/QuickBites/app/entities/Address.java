@@ -1,40 +1,49 @@
 package com.QuickBites.app.entities;
 
 import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 
+@Entity
 public class Address {
+	@Id
+	@GeneratedValue(strategy=GenerationType.IDENTITY)
+	private Long id;
 
 	@Column(nullable=false)
-	private String latitude;
+	private Double latitude;
 	
 	@Column(nullable=false)
-	private String longitude;
+	private Double longitude;
 	
 	@Column(nullable=false)
 	private String title;
 	
 	@Column(nullable=false)
-	private String description;
+	private String fullAddress;
+
 	
 	@ManyToOne
 	@JoinColumn(name="user_id")
 	private User user;
 
-	public String getLatitude() {
+	public Double getLatitude() {
 		return latitude;
 	}
 
-	public void setLatitude(String latitude) {
+	public void setLatitude(Double latitude) {
 		this.latitude = latitude;
 	}
 
-	public String getLongitude() {
+	public Double getLongitude() {
 		return longitude;
 	}
 
-	public void setLongitude(String longitude) {
+	public void setLongitude(Double longitude) {
 		this.longitude = longitude;
 	}
 
@@ -46,12 +55,12 @@ public class Address {
 		this.title = title;
 	}
 
-	public String getDescription() {
-		return description;
+	public String getFullAddress() {
+		return fullAddress;
 	}
 
-	public void setDescription(String description) {
-		this.description = description;
+	public void setFullAddress(String description) {
+		this.fullAddress = description;
 	}
 
 	public User getUser() {

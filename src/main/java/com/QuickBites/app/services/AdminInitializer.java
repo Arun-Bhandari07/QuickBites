@@ -30,7 +30,6 @@ public class AdminInitializer {
 			user.setFirstName("admin");
 			user.setLastName("01");
 			user.setUserName("admin");
-			user.setAddress("Nepal");
 			user.setEmail("admin001@gmail.com");
 			user.getRoles().add(adminRole);
 			user.getRoles().add(userRole);

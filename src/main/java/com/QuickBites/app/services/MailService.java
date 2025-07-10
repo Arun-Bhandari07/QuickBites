@@ -50,6 +50,7 @@ public class MailService {
     }
 
     // --- Method for "Forgot Password" flow ---
+    @Async("taskExecutor")
     public void sendPasswordResetOtpEmail(String email, String otp) {
         try {
             MimeMessage resetPasswordMessage = mailSender.createMimeMessage();
@@ -66,6 +67,7 @@ public class MailService {
     }
 
     // --- Method for "Change Password" (when logged in) ---
+    @Async("taskExecutor")
     public void sendPasswordChangeOtp(String to, String otp) {
         try {
             MimeMessage mimeMessage = mailSender.createMimeMessage();
@@ -97,6 +99,7 @@ public class MailService {
     }
 
     // --- New public method to send the OTP for an email change ---
+    @Async("taskExecutor")
     public void sendEmailChangeVerificationOtp(String newEmailAddress, String otp) {
         String emailContent = emailTemplateBuilder(otp);
         sendCustomEmail(
@@ -106,7 +109,52 @@ public class MailService {
         );
     }
 
+    @Async("taskExecutor")
+    public  void sendAgentApprovalEmail(String email,String userName) {
+        try {
+       
+            // Build HTML template
+            String content = emailTemplateBuilderAgentApproved(userName);
+            String subject = "🎉 You're officially a QuickBites Delivery Agent!";
+
+            // Send it
+            MimeMessage mimeMessage = mailSender.createMimeMessage();
+            MimeMessageHelper helper = new MimeMessageHelper(mimeMessage, true, "UTF-8");
+            helper.setFrom(emailSender, "Quick Bites Support");
+            helper.setTo(email);
+            helper.setSubject(subject);
+            helper.setText(content, true);
+            mailSender.send(mimeMessage);
+
+        } catch (UnsupportedEncodingException | MessagingException ex) {
+            throw new EmailMessagingException("Error sending delivery agent approval email", ex);
+        }
+    }
+
+    
+    @Async("taskExecutor")
+    public void sendAgentRejectionEmail(String email, String reason) {
+        try {
+            String userName = email.contains("@") ? email.substring(0, email.indexOf("@")) : "Applicant";
+            String content = emailTemplateBuilderAgentRejected(userName, reason);
+            String subject = "QuickBites – Delivery Agent Application Status";
+
+            MimeMessage mimeMessage = mailSender.createMimeMessage();
+            MimeMessageHelper helper = new MimeMessageHelper(mimeMessage, true, "UTF-8");
+            helper.setFrom(emailSender, "Quick Bites Support");
+            helper.setTo(email);
+            helper.setSubject(subject);
+            helper.setText(content, true);
+            mailSender.send(mimeMessage);
+        } catch (UnsupportedEncodingException | MessagingException ex) {
+            throw new EmailMessagingException("Failed to send agent rejection email", ex);
+        }
+    }
+
+    
+    
     // --- New public method to send the security alert for an email change ---
+    @Async("taskExecutor")
     public void sendEmailChangeAlert(String oldEmailAddress) {
         String alertContent = """
             <div style="font-family: Arial, sans-serif; line-height: 1.6;">
@@ -173,4 +221,59 @@ public class MailService {
             </div>
             """.formatted(otp, otpValidityMinutes, java.time.Year.now().getValue());
     }
+    
+    
+    
+    public String emailTemplateBuilderAgentApproved(String userName) {
+        return """
+            <div style="font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; line-height: 1.6; color: #333;">
+                <div style="max-width: 620px; margin: 25px auto; padding: 30px; border: 1px solid #e0e0e0; border-radius: 10px; background-color: #ffffff;">
+                    <h2 style="text-align: center; color: #28a745;">🎉 Welcome to QuickBites Delivery Team!</h2>
+                    <p>Dear %s,</p>
+                    <p>We’re excited to inform you that your application to become a Delivery Agent with <strong>QuickBites</strong> has been <span style="color: #28a745;"><strong>approved</strong></span> by our team!</p>
+                    <p>You are now officially part of our fast-moving, customer-centric delivery network. 🚀</p>
+                    <p style="margin-top: 20px;">Here’s what’s next:</p>
+                    <ul style="margin-left: 20px;">
+                        <li>✅ Set up your delivery profile</li>
+                        <li>✅ Get assigned orders in your region</li>
+                        <li>✅ Start earning and delivering with confidence</li>
+                    </ul>
+                    <p>If you have any questions or need help getting started, feel free to reach out to our support team.</p>
+                    <p>Thank you for choosing to ride with us.<br>We’re thrilled to have you on board!</p>
+                    <p style="margin-top: 30px;">Warm regards,<br><strong>The QuickBites Team</strong></p>
+                </div>
+                <div style="text-align: center; font-size: 12px; color: #777; margin-top: 20px;">
+                    This is an automated message. Please do not reply directly to this email.<br>
+                    QuickBites © %d
+                </div>
+            </div>
+            """.formatted(userName, java.time.Year.now().getValue());
+    }
+
+    
+    public String emailTemplateBuilderAgentRejected(String userName, String reason) {
+        return """
+            <div style="font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; line-height: 1.6; color: #333;">
+                <div style="max-width: 620px; margin: 25px auto; padding: 30px; border: 1px solid #e0e0e0; border-radius: 10px; background-color: #ffffff;">
+                    <h2 style="text-align: center; color: #dc3545;">🚫 Delivery Agent Application Rejected</h2>
+                    <p>Dear %s,</p>
+                    <p>Thank you for applying to become a Delivery Agent with <strong>QuickBites</strong>.</p>
+                    <p>After careful review, we regret to inform you that your application has been <span style="color: #dc3545;"><strong>rejected</strong></span>.</p>
+                    <p><strong>Reason provided:</strong></p>
+                    <blockquote style="background-color: #f8d7da; border-left: 5px solid #dc3545; padding: 12px; font-style: italic; margin: 20px 0;">
+                        %s
+                    </blockquote>
+                    <p>If you believe this was a mistake or you'd like to reapply after making corrections, you are welcome to initiate a new application.</p>
+                    <p>We appreciate your interest in QuickBites and wish you all the best.</p>
+                    <p style="margin-top: 30px;">Warm regards,<br><strong>The QuickBites Team</strong></p>
+                </div>
+                <div style="text-align: center; font-size: 12px; color: #777; margin-top: 20px;">
+                    This is an automated message. Please do not reply directly to this email.<br>
+                    QuickBites © %d
+                </div>
+            </div>
+            """.formatted(userName, reason, java.time.Year.now().getValue());
+    }
+
+    
 }

@@ -4,7 +4,6 @@ import java.math.BigDecimal;
 import java.util.List;
 
 import com.QuickBites.app.entities.FoodCategory;
-import com.QuickBites.app.entities.FoodVariant;
 
 public class FoodItemResponseDTO {
 

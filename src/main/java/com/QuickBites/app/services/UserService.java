@@ -60,8 +60,7 @@ public class UserService {
 		user.setFirstName(updateData.getFirstName());
 		user.setLastName(updateData.getLastName());
 		user.setPhone(updateData.getPhone());
-		user.setAddress(updateData.getAddress());
-
+		user.getAddress().addAll(updateData.getAddress());
 		User updatedUser = userRepository.save(user);
 		return userMapper.populateUserProfileDTO(updatedUser);
 

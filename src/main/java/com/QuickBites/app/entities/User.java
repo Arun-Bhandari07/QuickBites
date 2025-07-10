@@ -3,11 +3,13 @@ package com.QuickBites.app.entities;
 
 import java.time.LocalDateTime;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
 
+import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
@@ -17,11 +19,10 @@ import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.JoinTable;
 import jakarta.persistence.ManyToMany;
+import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
-
-
 
 @Entity
 @Table(name="_user")
@@ -34,13 +35,15 @@ public class User {
 	@Column(updatable=false)
 	private int id;
 	
-	@NotNull
-	@NotBlank
+	@Column(nullable=false)
 	private String firstName;
+	
+	@Column(nullable=false)
 	private String lastName;
 	
 	@Column(unique=true,nullable=false)
 	private String userName;
+	
 	private String password;
 	
 	@Column(unique=true)
@@ -50,10 +53,6 @@ public class User {
 	
 	@Column(unique=true, nullable=true)
 	private String phone;
-	
-	@Column(nullable=true)
-	private String address;
-	
 	
 	@CreationTimestamp
 	private LocalDateTime createdAt;
@@ -69,6 +68,11 @@ public class User {
 			inverseJoinColumns = @JoinColumn(name="role_id")
 			)
 	private Set<UserRole> roles = new HashSet<>();
+	
+	
+	@OneToMany(mappedBy ="user",cascade=CascadeType.ALL,orphanRemoval=true)
+	private List<Address> address;
+	
 	
 	public int getId() {
 		return id;
@@ -125,14 +129,6 @@ public class User {
 	public LocalDateTime getCreatedAt() {
 		return createdAt;
 	}
-
-	public String getAddress() {
-		return this.address;
-	}
-	
-	public void setAddress(String address) {
-		this.address  = address;
-	}
 	
 	public Set<UserRole> getRoles(){
 		return this.roles;
@@ -146,5 +142,13 @@ public class User {
 		return updatedAt;
 	}
 
+	public List<Address> getAddress() {
+		return address;
+	}
+
+	public void setAddress(List<Address> address) {
+		this.address = address;
+	}
+	
 	
 }

@@ -30,19 +30,24 @@ public class UserRegistrationService {
 	private AdminNotificationService adminNotificationService;
 	private FileService fileService;
 	private DeliveryAgentRepository agentRepo;
+	private MailService mailService;
+	
 	
 	
 	public UserRegistrationService(PendingUserRepository pendingUserRepo,
 								   UserRepository userRepo,
 								   UserRoleRepository userRoleRepo,
 								   FileService fileService,
-								   DeliveryAgentRepository agentRepo, AdminNotificationService adminNotificationService) {
+								   DeliveryAgentRepository agentRepo, 
+								   AdminNotificationService adminNotificationService,
+								   MailService mailService) {
 		this.pendingUserRepo = pendingUserRepo;
 		this.userRepo = userRepo;
 		this.userRoleRepo=userRoleRepo;
 		this.adminNotificationService=adminNotificationService;
 		this.fileService = fileService;
 		this.agentRepo = agentRepo;
+		this.mailService=mailService;
 		
 	}
 	
@@ -102,6 +107,7 @@ public class UserRegistrationService {
 		agentRepo.save(agent);
 		userRepo.save(user);
 		pendingUserRepo.delete(pendingUser);
+		mailService.sendAgentApprovalEmail(user.getEmail(),user.getUserName());
 	}	
 	
 	

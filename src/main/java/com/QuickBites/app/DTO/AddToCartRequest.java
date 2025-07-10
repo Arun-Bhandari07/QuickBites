@@ -1,11 +1,19 @@
 package com.QuickBites.app.DTO;
 
+import jakarta.validation.constraints.Max;
+import jakarta.validation.constraints.NotNull;
 
 public class AddToCartRequest {
 
+	@NotNull(message="Invalid addition of food Item with no id")
 	private Long foodItemId;
+	
+	@NotNull(message="Invalid addition of food Variatn with no id")
 	private Long foodVariantId;
-	private int quantity;
+	
+	
+	@Max(value = 10, message = "Cannot add more than 10 items in cart. Please contact us directly")
+	private  int quantity;
 	
 	public Long getFoodItemId() {
 		return foodItemId;
