@@ -4,9 +4,9 @@ import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Optional;
 import java.util.stream.Collectors;
 
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 
 import com.QuickBites.app.DTO.CartItemRequestDTO;
@@ -14,13 +14,20 @@ import com.QuickBites.app.DTO.OrderItemResponseDTO;
 import com.QuickBites.app.DTO.OrderResponseDTO;
 import com.QuickBites.app.DTO.PlaceOrderRequestDTO;
 import com.QuickBites.app.DTO.PlaceOrderResponse;
+import com.QuickBites.app.Exception.BadRequestException;
 import com.QuickBites.app.Exception.ResourceNotFoundException;
+import com.QuickBites.app.entities.Address;
+import com.QuickBites.app.entities.CartItem;
 import com.QuickBites.app.entities.FoodItem;
 import com.QuickBites.app.entities.FoodVariant;
+import com.QuickBites.app.entities.LocationInfo;
 import com.QuickBites.app.entities.Order;
 import com.QuickBites.app.entities.OrderItem;
 import com.QuickBites.app.entities.User;
 import com.QuickBites.app.enums.OrderStatus;
+import com.QuickBites.app.enums.PaymentMethod;
+import com.QuickBites.app.repositories.AddressRepository;
+import com.QuickBites.app.repositories.CartItemRepository;
 import com.QuickBites.app.repositories.FoodItemRepository;
 import com.QuickBites.app.repositories.FoodVariantRepository;
 import com.QuickBites.app.repositories.OrderRepository;
@@ -34,72 +41,103 @@ public class OrderService {
     private final FoodItemRepository foodItemRepo;
     private final FoodVariantRepository foodVariantRepo;
     private final StripeService stripeService;
+    private final CartItemRepository cartItemRepo;
+    private final AddressRepository addressRepo;
 
     
     public OrderService(OrderRepository orderRepo,
                         UserRepository userRepo,
                         FoodItemRepository foodItemRepo,
                         FoodVariantRepository foodVariantRepo,
-                        StripeService stripeService) {
+                        StripeService stripeService,
+                        CartItemRepository cartItemRepo
+                        ,AddressRepository addressRepo) {
         this.orderRepo = orderRepo;
         this.userRepo = userRepo;
         this.foodItemRepo = foodItemRepo;
         this.foodVariantRepo = foodVariantRepo;
         this.stripeService = stripeService;
+        this.cartItemRepo=cartItemRepo;
+        this.addressRepo=addressRepo;
     }
 
-    public PlaceOrderResponse placeOrder(PlaceOrderRequestDTO req, String username) {
-		//find User to relate the order to particular user
-		User user = userRepo.findByUserName(username)
-				.orElseThrow(()->new ResourceNotFoundException("User doesnt exists"));
-		
-		//Create a real Order entity and set payment status pending
-		Order order = new Order();
-		order.setUser(user);
-		order.setStatus(OrderStatus.PENDING_PAYMENT);
-		order.setCreatedAt(LocalDateTime.now());
-		List<OrderItem> orderItems  = new ArrayList<>();
-		BigDecimal totalAmount = BigDecimal.ZERO;
-		
-		//loop through each cartItemRequest to map to orderItem and store in list
-		for(CartItemRequestDTO cartItem: req.getItems()){
-			FoodItem foodItem = foodItemRepo.findById(cartItem.getFoodItemId())
-			        .orElseThrow(() -> new ResourceNotFoundException("Food item not found"));
+    public PlaceOrderResponse placeOrder(PlaceOrderRequestDTO req, String username){
+    	LocationInfo location;
+    	
+    	
+        User user = userRepo.findByUserName(username)
+            .orElseThrow(() -> new ResourceNotFoundException("User not found"));
 
-			    FoodVariant variant = foodVariantRepo.findById(cartItem.getVariantId())
-			        .orElseThrow(() -> new ResourceNotFoundException("Variant not found"));
-			    
-			    BigDecimal price = Optional.ofNullable(variant.getPrice())
-			    	    .orElseThrow(() -> new IllegalStateException("Variant price cannot be null"));
-			    
-			    int quantity = cartItem.getQuantity();
-			    BigDecimal subtotal = price.multiply(BigDecimal.valueOf(quantity));
-			    totalAmount = totalAmount.add(subtotal);
-			    
-			    OrderItem orderItem = new OrderItem();
-			    orderItem.setOrder(order);
-			    orderItem.setFoodItem(foodItem);
-			    orderItem.setVariant(variant);
-			    orderItem.setQuantity(quantity);
-			    orderItem.setPriceAtPurchase(price);
-			   
-			    orderItems.add(orderItem);
-		}
-		
-		//Set the OrderItem list and total Amount in Order Entity
-		order.setItems(orderItems);
-		order.setTotalAmount(totalAmount);
-		
-	//Save order to database
-		Order savedOrder = orderRepo.save(order);
+        if (user.getPhone() == null && req.getPhoneNumber() != null) {
+            user.setPhone(req.getPhoneNumber());   
+            userRepo.save(user); // Persist updated phone
+        }
+        
+        if (req.getAddressId() == null && req.getLocationInfo() == null) {
+            throw new BadRequestException("Either addressId or custom location must be provided.");
+        }
+        
+        if (req.getAddressId() != null) {
+            Address address = addressRepo.findByIdAndUserId(req.getAddressId(), user.getId())
+                .orElseThrow(() -> new AccessDeniedException("Address not found or not owned by user"));
 
-		//call make payment method of stripe Service
-		String stripeUrl = stripeService.makePayment(savedOrder);
-		
-		return new PlaceOrderResponse(savedOrder.getId(),totalAmount, stripeUrl);
-		
-		
-	}
+            location = new LocationInfo();
+            location.setLatitude(address.getLatitude());
+            location.setLongitude(address.getLongitude());
+            location.setDeliveryAddress(address.getFullAddress());
+        } else {
+            location = req.getLocationInfo(); // use manual input
+        }
+        
+        Order order = new Order();
+        order.setUser(user);
+        order.setStatus(OrderStatus.PENDING_PAYMENT);
+        order.setCreatedAt(LocalDateTime.now());
+        order.setSpecialInstructions(req.getSpecialInstructions());
+        order.setLocationInfo(location);
+        order.setPhone(req.getPhoneNumber());
+
+        List<OrderItem> orderItems = new ArrayList<>();
+        BigDecimal totalAmount = BigDecimal.ZERO;
+
+        for (CartItemRequestDTO dto : req.getItems()) {
+            CartItem cartItem = cartItemRepo.findByIdAndCartUserUserName(dto.getCartItemId(), username)
+                .orElseThrow(() -> new AccessDeniedException("Cart item not found in your cart"));
+
+            FoodItem foodItem = cartItem.getFoodItem();
+            FoodVariant variant = cartItem.getVariant();
+            int quantity = cartItem.getQuantity();
+            BigDecimal price = variant.getPrice(); // or fallback if variant price is null
+            BigDecimal subtotal = price.multiply(BigDecimal.valueOf(quantity));
+            totalAmount = totalAmount.add(subtotal);
+
+            OrderItem orderItem = new OrderItem();
+            orderItem.setOrder(order);
+            orderItem.setFoodItem(foodItem);
+            orderItem.setVariant(variant);
+            orderItem.setQuantity(quantity);
+            orderItem.setPriceAtPurchase(price);
+
+            orderItems.add(orderItem);
+        }
+        order.setItems(orderItems);
+        order.setTotalAmount(totalAmount);
+        Order savedOrder = orderRepo.save(order);
+        order.setPaymentMethod(req.getPaymentMethod());
+        
+        if (req.getPaymentMethod() == PaymentMethod.STRIPE) {
+            String stripeUrl = stripeService.makePayment(savedOrder);
+            return new PlaceOrderResponse(savedOrder.getId(), totalAmount, stripeUrl);
+        } else if (req.getPaymentMethod() == PaymentMethod.COD) {
+            savedOrder.setStatus(OrderStatus.EN_ROUTE); 
+            orderRepo.save(savedOrder);
+            return new PlaceOrderResponse(savedOrder.getId(), totalAmount, null);
+        }
+        String stripeUrl = stripeService.makePayment(savedOrder);
+
+        return new PlaceOrderResponse(savedOrder.getId(), totalAmount, stripeUrl);
+    }
+
     
     
     public Order getOrderByIdForUser(Long orderId, String username) {

@@ -95,4 +95,7 @@ public class UserController {
 	        ApiResponse<String> response = new ApiResponse<>("success", "Your email address has been successfully updated.", null);
 	        return ResponseEntity.ok(response);
 	    }
+	  
+	  
+	  
 }

@@ -144,6 +144,20 @@ public class AdminController {
 		return ResponseEntity.noContent().build();
 	}
 	
+	@PutMapping(path="/foodCategory/{id}/activate")
+	public ResponseEntity<CategoryResponseDTO>activateFoodCategory(@PathVariable(name="id")Long id)
+	{
+		CategoryResponseDTO updatedCategory = foodCategoryService.activateCategory(id);
+		return ResponseEntity.ok(updatedCategory);
+	}
+	
+	@PutMapping(path="/foodCategory/{id}/deactivate")
+	public ResponseEntity<CategoryResponseDTO>deactivateFoodCategory(@PathVariable(name="id")Long id)
+	{
+		CategoryResponseDTO updatedCategory = foodCategoryService.deactivateCategory(id);
+		return ResponseEntity.ok(updatedCategory);
+	}
+	
 	@GetMapping("/test")
 	public String testingPublic() {
 		return "Testing purppose";

@@ -11,13 +11,13 @@ import com.QuickBites.app.enums.PaymentMethod;
 import com.fasterxml.jackson.annotation.JsonManagedReference;
 
 import jakarta.persistence.CascadeType;
+import jakarta.persistence.Embedded;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
-import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
@@ -45,15 +45,24 @@ public class Order {
     @CreationTimestamp
     private LocalDateTime createdAt;
     
-    @ManyToOne
-    @JoinColumn(name="address_id")
-    private Address deliveryAddress;
+    @Embedded
+	LocationInfo locationInfo;
     
     private String phone;
+    
+    private String specialInstructions;
     
     @Enumerated
     private PaymentMethod paymentMethod;
     
+
+	public LocationInfo getLocationInfo() {
+		return locationInfo;
+	}
+
+	public void setLocationInfo(LocationInfo locationInfo) {
+		this.locationInfo = locationInfo;
+	}
 
 	public Long getId() {
 		return id;
@@ -103,13 +112,6 @@ public class Order {
 		this.createdAt = createdAt;
 	}
 
-	public Address getDeliveryAddress() {
-		return deliveryAddress;
-	}
-
-	public void setDeliveryAddress(Address deliveryAddress) {
-		this.deliveryAddress = deliveryAddress;
-	}
 
 	public PaymentMethod getPaymentMethod() {
 		return paymentMethod;
@@ -125,6 +127,14 @@ public class Order {
 
 	public void setPhone(String phone) {
 		this.phone = phone;
+	}
+
+	public String getSpecialInstructions() {
+		return specialInstructions;
+	}
+
+	public void setSpecialInstructions(String specialInstructions) {
+		this.specialInstructions = specialInstructions;
 	}
 
 	

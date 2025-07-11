@@ -2,6 +2,7 @@ package com.QuickBites.app.Exception;
 import java.util.HashMap;
 import java.util.Map;
 
+import org.apache.coyote.BadRequestException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.FieldError;
@@ -119,6 +120,18 @@ public class GlobalExceptionHandler{
 				,"PAYLOAD_TOO_LARGE");
 		return ResponseEntity.status(HttpStatus.PAYLOAD_TOO_LARGE).body(res);
 	}
+	
+	@ExceptionHandler(BadRequestException.class)
+	public ResponseEntity<ApiErrorResponse> handleBadRequestException(BadRequestException ex, WebRequest req){
+		ApiErrorResponse res  = new ApiErrorResponse(
+				ex.getMessage(),
+				HttpStatus.BAD_REQUEST.value(),
+				req.getDescription(false).substring(4),
+				"BAD_REQUEST"
+				);
+		return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(res);
+	}
+	
 	
 	@ExceptionHandler(Exception.class)
 	public ResponseEntity<ApiErrorResponse> handleGenericException(Exception ex, WebRequest req){

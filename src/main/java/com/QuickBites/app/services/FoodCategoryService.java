@@ -107,4 +107,24 @@ public class FoodCategoryService {
 	}
 	
 	
+	@Transactional
+	public CategoryResponseDTO activateCategory(Long id) {
+		FoodCategory category = foodCategoryRepo.findById(id)
+				.orElseThrow(()-> new ResourceNotFoundException("Cannot find food category with id: "+id));
+		
+		category.setActive(true);
+		FoodCategory savedCategory=foodCategoryRepo.save(category);
+		return foodCategoryMapper.entityToCategoryResponse(savedCategory);
+	}
+	
+	@Transactional
+	public CategoryResponseDTO deactivateCategory(Long id) {
+		FoodCategory category =foodCategoryRepo.findById(id)
+				.orElseThrow(()->new ResourceNotFoundException("Cannot find food category with id:"+id));
+		category.setActive(false);
+		FoodCategory  savedCategory=foodCategoryRepo.save(category);
+		return foodCategoryMapper.entityToCategoryResponse(savedCategory);
+	}
+	
+	
 }
