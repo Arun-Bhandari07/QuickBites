@@ -1,12 +1,18 @@
 package com.QuickBites.app.entities;
 
 import jakarta.persistence.Embeddable;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
 
 @Embeddable
 public class LocationInfo {
 
+    @NotNull
 	private Double latitude;
-	private Double longitude;	
+    @NotNull
+	private Double longitude;
+   
+    @NotBlank
 	private String deliveryAddress;
 	
 	

@@ -58,6 +58,8 @@ public class StripeWebhookController {
     		return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Invalid Signature");
     	}
     	
+    	System.out.println("HELOOOOOOOOOOOOOOOOOOOOOOOOOOOO");
+    	
     	//check the status of payment and update order status
     	if("checkout.session.completed".equals(event.getType())) {
     		Session session = (Session) event.getDataObjectDeserializer()
@@ -69,7 +71,7 @@ public class StripeWebhookController {
     			Long orderId = Long.valueOf(orderIdStr);
     			Order order = orderRepo.findById(orderId)
     						.orElse(null);
-    				if(order!=null && order.getStatus()==OrderStatus.PENDING_PAYMENT) {
+    				if(order!=null && order.getStatus()==OrderStatus.PREPARING) {
     					order.setStatus(OrderStatus.PAID);
     					orderRepo.save(order);
     					System.out.println("Order #"+orderId+" marked as PAID");

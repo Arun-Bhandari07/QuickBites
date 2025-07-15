@@ -2,6 +2,7 @@ package com.QuickBites.app.controller;
 
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
@@ -15,9 +16,12 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.QuickBites.app.DTO.AdminOrderMetricsDTO;
 import com.QuickBites.app.DTO.AgentRejectionRequest;
+import com.QuickBites.app.DTO.AgentResponseDTO;
 import com.QuickBites.app.DTO.CategoryResponseDTO;
 import com.QuickBites.app.DTO.CreateFoodCategoryDTO;
 import com.QuickBites.app.DTO.CreateFoodItemDTO;
@@ -27,6 +31,7 @@ import com.QuickBites.app.DTO.FoodVariantResponseDTO;
 import com.QuickBites.app.DTO.UpdateFoodCategoryDTO;
 import com.QuickBites.app.DTO.UpdateFoodItemDTO;
 import com.QuickBites.app.DTO.UpdateFoodVariantDTO;
+import com.QuickBites.app.DTO.UserProfileDTO;
 import com.QuickBites.app.Exception.FileStorageException;
 import com.QuickBites.app.Exception.RegistrationException;
 import com.QuickBites.app.Exception.ResourceNotFoundException;
@@ -36,6 +41,8 @@ import com.QuickBites.app.services.DeliveryAgentService;
 import com.QuickBites.app.services.FoodCategoryService;
 import com.QuickBites.app.services.FoodItemService;
 import com.QuickBites.app.services.FoodVariantService;
+import com.QuickBites.app.services.OrderService;
+import com.QuickBites.app.services.UserService;
 
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
@@ -50,22 +57,42 @@ public class AdminController {
 	private FoodVariantService foodVariantService;
 	private PendingUserRepository pendingUserRepo;
 	private DeliveryAgentService deliveryAgentService;
+	private UserService userService;
+	private OrderService orderService;
 	
 	public AdminController(FoodCategoryService foodCategoryService
 			,FoodItemService foodItemService
 			,FoodVariantService foodVariantService
 			,PendingUserRepository pendingUserRepo
-			,DeliveryAgentService deliveryAgentService) {
+			,DeliveryAgentService deliveryAgentService
+			,UserService userService
+			,OrderService orderService) {
 		this.foodCategoryService=foodCategoryService;
 		this.foodItemService = foodItemService;
 		this.foodVariantService = foodVariantService;
 		this.pendingUserRepo=pendingUserRepo;
 		this.deliveryAgentService=deliveryAgentService;
+		this.userService=userService;
+		this.orderService=orderService;
+	}
+	
+	@GetMapping("/users")
+	public List<UserProfileDTO> getAllUsers(){
+		return 	userService.getAllUsers();
 	}
 	
 	@GetMapping("/pending-agents")
 	public List<PendingUser> getPendingAgents() {
 		return pendingUserRepo.findByNotAdminApproved();
+	}
+	
+	@GetMapping("/agents")
+	public List<AgentResponseDTO> getAllAgents(@RequestParam(name="isActive") Optional<Boolean> isActive){
+		if(isActive.isPresent()) {
+			List<AgentResponseDTO> agents= deliveryAgentService.getAllAgentsByStatus(isActive.get());
+			return agents;
+		}
+		return deliveryAgentService.getAllAgents();
 	}
 	
 	@PostMapping("/approve-agent/{pendingUserId}")
@@ -156,6 +183,11 @@ public class AdminController {
 	{
 		CategoryResponseDTO updatedCategory = foodCategoryService.deactivateCategory(id);
 		return ResponseEntity.ok(updatedCategory);
+	}
+	
+	@GetMapping("/reports")
+	public AdminOrderMetricsDTO getDailyOrderValue() {
+		return orderService.getCompleteReport();
 	}
 	
 	@GetMapping("/test")

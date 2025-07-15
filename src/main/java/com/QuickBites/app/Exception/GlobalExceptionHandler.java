@@ -32,6 +32,7 @@ public class GlobalExceptionHandler{
 			String fieldName = ((FieldError) error).getField();
 			String errorMessage = error.getDefaultMessage();
 			fieldError.put(fieldName, errorMessage);
+			System.out.println("Validation error: " + fieldError);
 		});
 		String path = req.getDescription(false).substring(4);
 		ApiErrorResponse res = new ApiErrorResponse(

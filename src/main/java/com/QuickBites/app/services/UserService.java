@@ -1,6 +1,8 @@
 package com.QuickBites.app.services;
 
 import java.time.LocalDateTime;
+import java.util.List;
+import java.util.stream.Collectors;
 
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -52,6 +54,30 @@ public class UserService {
 		return dto;
 
 	}
+	
+	
+	public List<UserProfileDTO> getAllUsers(){
+			List<User> userList =userRepository.findAll();
+			List<UserProfileDTO> allUsers = userList.stream()
+									.map(user->{
+									UserProfileDTO dto = new UserProfileDTO();
+									dto.setFirstName(user.getFirstName());
+									dto.setLastName(user.getLastName());
+									dto.setEmail(user.getEmail());
+									dto.setUsername(user.getUserName());
+									dto.setPhone(user.getPhone());
+									return dto;
+									})
+					.collect(Collectors.toList());
+			return allUsers;
+								
+	}
+	
+	
+	public void getActiveAgents() {
+		
+	}
+	
 
 	public UserProfileDTO updateUserProfile(String username, UpdateProfileDTO updateData) {
 		User user = userRepository.findByUserName(username)

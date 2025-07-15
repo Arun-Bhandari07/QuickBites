@@ -1,13 +1,20 @@
 package com.QuickBites.app.services;
 
+import java.util.List;
+import java.util.stream.Collectors;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import com.QuickBites.app.DTO.AgentResponseDTO;
 import com.QuickBites.app.Exception.FileStorageException;
 import com.QuickBites.app.Exception.ResourceNotFoundException;
+import com.QuickBites.app.entities.DeliveryAgent;
 import com.QuickBites.app.entities.PendingUser;
 import com.QuickBites.app.enums.ImageType;
 import com.QuickBites.app.enums.RoleName;
+import com.QuickBites.app.mapper.DeliveryAgentMapper;
+import com.QuickBites.app.repositories.DeliveryAgentRepository;
 import com.QuickBites.app.repositories.PendingUserRepository;
 
 @Service
@@ -24,7 +31,28 @@ public class DeliveryAgentService {
 	
 	@Autowired
 	private UserRegistrationService userRegistrationService;
+	
+	@Autowired
+	private DeliveryAgentRepository deliveryAgentRepo;
+	
+	
+	public List<AgentResponseDTO> getAllAgents() {
+		List<DeliveryAgent> agents = deliveryAgentRepo.findAll();
+		List<AgentResponseDTO> res = 	agents.stream()
+			.map(agent->DeliveryAgentMapper.entityToDto(agent))
+			.collect(Collectors.toList());
+		return res;
+			
+	}
 
+	public List<AgentResponseDTO> getAllAgentsByStatus(boolean status){
+		List<DeliveryAgent> agents = deliveryAgentRepo.findByIsActive(status);
+		List<AgentResponseDTO> res = 	agents.stream()
+				.map(agent->DeliveryAgentMapper.entityToDto(agent))
+				.collect(Collectors.toList());
+		return res;
+	}
+	
 	public boolean approveAgentById(Long id) {
 		PendingUser pendingUser = pendingUserRepo.findById(id)
 				.orElseThrow(()->new ResourceNotFoundException("User with given id"+id+"doesn't exists on pending"));

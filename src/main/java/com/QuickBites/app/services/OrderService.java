@@ -1,14 +1,18 @@
 package com.QuickBites.app.services;
 
 import java.math.BigDecimal;
+import java.time.Duration;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
 import org.springframework.security.access.AccessDeniedException;
+import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Service;
 
+import com.QuickBites.app.AdminOrderMetrics;
+import com.QuickBites.app.DTO.AdminOrderMetricsDTO;
 import com.QuickBites.app.DTO.CartItemRequestDTO;
 import com.QuickBites.app.DTO.OrderItemResponseDTO;
 import com.QuickBites.app.DTO.OrderResponseDTO;
@@ -28,8 +32,6 @@ import com.QuickBites.app.enums.OrderStatus;
 import com.QuickBites.app.enums.PaymentMethod;
 import com.QuickBites.app.repositories.AddressRepository;
 import com.QuickBites.app.repositories.CartItemRepository;
-import com.QuickBites.app.repositories.FoodItemRepository;
-import com.QuickBites.app.repositories.FoodVariantRepository;
 import com.QuickBites.app.repositories.OrderRepository;
 import com.QuickBites.app.repositories.UserRepository;
 
@@ -38,24 +40,18 @@ public class OrderService {
 
     private final OrderRepository orderRepo;
     private final UserRepository userRepo;
-    private final FoodItemRepository foodItemRepo;
-    private final FoodVariantRepository foodVariantRepo;
     private final StripeService stripeService;
     private final CartItemRepository cartItemRepo;
     private final AddressRepository addressRepo;
 
     
     public OrderService(OrderRepository orderRepo,
-                        UserRepository userRepo,
-                        FoodItemRepository foodItemRepo,
-                        FoodVariantRepository foodVariantRepo,
+                        UserRepository userRepo,     
                         StripeService stripeService,
                         CartItemRepository cartItemRepo
                         ,AddressRepository addressRepo) {
         this.orderRepo = orderRepo;
         this.userRepo = userRepo;
-        this.foodItemRepo = foodItemRepo;
-        this.foodVariantRepo = foodVariantRepo;
         this.stripeService = stripeService;
         this.cartItemRepo=cartItemRepo;
         this.addressRepo=addressRepo;
@@ -67,6 +63,10 @@ public class OrderService {
     	
         User user = userRepo.findByUserName(username)
             .orElseThrow(() -> new ResourceNotFoundException("User not found"));
+        
+        if(user.getTrustScore() == 0 && req.getPaymentMethod() == PaymentMethod.COD) {
+        	throw new BadRequestException("User cannot order via COD due to too much cancellation");
+        }
 
         if (user.getPhone() == null && req.getPhoneNumber() != null) {
             user.setPhone(req.getPhoneNumber());   
@@ -122,20 +122,24 @@ public class OrderService {
         }
         order.setItems(orderItems);
         order.setTotalAmount(totalAmount);
-        Order savedOrder = orderRepo.save(order);
-        order.setPaymentMethod(req.getPaymentMethod());
+   
+        System.out.println(req.getPaymentMethod());
         
         if (req.getPaymentMethod() == PaymentMethod.STRIPE) {
-            String stripeUrl = stripeService.makePayment(savedOrder);
-            return new PlaceOrderResponse(savedOrder.getId(), totalAmount, stripeUrl);
+        	order.setPaymentMethod(PaymentMethod.STRIPE);
+        	order.setStatus(OrderStatus.PENDING_PAYMENT);
+            
         } else if (req.getPaymentMethod() == PaymentMethod.COD) {
-            savedOrder.setStatus(OrderStatus.EN_ROUTE); 
-            orderRepo.save(savedOrder);
-            return new PlaceOrderResponse(savedOrder.getId(), totalAmount, null);
+        	order.setPaymentMethod(PaymentMethod.COD);
+            order.setStatus(OrderStatus.PREPARING); 
+           
         }
-        String stripeUrl = stripeService.makePayment(savedOrder);
-
-        return new PlaceOrderResponse(savedOrder.getId(), totalAmount, stripeUrl);
+        Order savedOrder = orderRepo.save(order);
+       String stripeUrl = req.getPaymentMethod() == PaymentMethod.STRIPE
+    		   ?stripeService.makePayment(savedOrder):null;
+      
+        return new PlaceOrderResponse(savedOrder.getId(), totalAmount , stripeUrl);
+        
     }
 
     
@@ -153,7 +157,6 @@ public class OrderService {
     	            .toList();
     	 return dtoList;
     }
-    
     
     public OrderResponseDTO convertToResponseDTO(Order order) {
         List<OrderItemResponseDTO> itemDTOs = order.getItems().stream().map(item -> {
@@ -179,6 +182,31 @@ public class OrderService {
     }
     
     
+    public AdminOrderMetricsDTO getCompleteReport() {
+    	AdminOrderMetrics raw = orderRepo.fetchAllOrderMetrics();
+
+        AdminOrderMetricsDTO dto = new AdminOrderMetricsDTO();
+        dto.setTotalOrders(raw.getTotalOrders());
+        dto.setOrdersToday(raw.getOrdersToday());
+        dto.setOrdersYesterday(raw.getOrdersYesterday());
+        dto.setOrdersThisWeek(raw.getOrdersThisWeek());
+        dto.setOrdersThisMonth(raw.getOrdersThisMonth());
+
+        dto.setRevenueToday(raw.getRevenueToday());
+        dto.setRevenueYesterday(raw.getRevenueYesterday());
+        dto.setRevenueThisWeek(raw.getRevenueThisWeek());
+        dto.setRevenueThisMonth(raw.getRevenueThisMonth());
+
+        dto.setStripePaymentsToday(raw.getStripePaymentsToday());
+        dto.setCodPaymentsToday(raw.getCodPaymentsToday());
+        dto.setStripePaymentsTotal(raw.getStripePaymentsTotal());
+        dto.setCodPaymentsTotal(raw.getCodPaymentsTotal());
+
+        return dto;
+    }
+    
+    
+    
     public String retryCheckout(Long orderId) {
         Order order = orderRepo.findById(orderId)
             .orElseThrow(() -> new ResourceNotFoundException("Order not found"));
@@ -190,6 +218,29 @@ public class OrderService {
         return stripeService.makePayment(order);
     }
 
+    public void cancelOrder(Long id, Authentication authentication) {
+    	//first Check if order exists and belong to current user
+    	//check the time of order , if less than 2 minutes simply cancel order
+    	//if more than 2 minutes, decrease the trust score of User
+    	
+    	 Order order = orderRepo.findByIdAndUserUserName(id,authentication.getName())
+    			 .orElseThrow(()->new ResourceNotFoundException("Cannot find order with given id "+id));
+    	 CustomUserDetails customUser = (CustomUserDetails )authentication.getPrincipal();
+    	 User user = customUser.getUser();
+    	 Duration duration = Duration.between(order.getCreatedAt(), LocalDateTime.now());
+    	 if(duration.toMinutes()>2) {
+    		 user.setTrustScore(user.getTrustScore()-1);    		 
+    		 userRepo.save(user);
+    	 }
+    	 
+    	 order.setStatus(OrderStatus.CANCELLED);
+    	 orderRepo.save(order);
+    	 
+    	 
+    	 
+    }
+    
+    
     
 }
 

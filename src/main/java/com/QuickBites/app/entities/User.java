@@ -60,6 +60,9 @@ public class User {
 	@UpdateTimestamp
 	private LocalDateTime updatedAt;
 	
+	@Column(nullable=false)
+	private int trustScore = 5;
+	
 	
 	@ManyToMany(fetch = FetchType.EAGER)
 	@JoinTable(
@@ -148,6 +151,14 @@ public class User {
 
 	public void setAddress(List<Address> address) {
 		this.address = address;
+	}
+
+	public int getTrustScore() {
+		return trustScore;
+	}
+
+	public void setTrustScore(int trustScore) {
+		this.trustScore = trustScore;
 	}
 	
 	

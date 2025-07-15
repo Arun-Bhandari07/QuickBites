@@ -11,6 +11,7 @@ import com.QuickBites.app.enums.PaymentMethod;
 import com.fasterxml.jackson.annotation.JsonManagedReference;
 
 import jakarta.persistence.CascadeType;
+import jakarta.persistence.Column;
 import jakarta.persistence.Embedded;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
@@ -39,6 +40,7 @@ public class Order {
 
     private BigDecimal totalAmount;
 
+    @Column(name="orderStatus")
     @Enumerated(EnumType.STRING)
     private OrderStatus status; 
 
@@ -52,7 +54,7 @@ public class Order {
     
     private String specialInstructions;
     
-    @Enumerated
+    @Enumerated(EnumType.STRING)
     private PaymentMethod paymentMethod;
     
 

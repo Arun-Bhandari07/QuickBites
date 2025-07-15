@@ -9,6 +9,7 @@ import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
@@ -41,6 +42,13 @@ public class OrderController {
         PlaceOrderResponse response = orderService.placeOrder(request, username);
         return ResponseEntity.ok(response);
     }
+    
+    
+   @PutMapping("/cancel/{id}")
+   public void cancelOrder(@PathVariable(name="id") Long id, Authentication auth) {
+	   	orderService.cancelOrder(id , auth);
+   }
+   
 
     @GetMapping("/{id}")
     public ResponseEntity<OrderResponseDTO> getOrderById(@PathVariable("id") Long id, Authentication auth) {

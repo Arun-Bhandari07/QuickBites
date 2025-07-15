@@ -1,5 +1,7 @@
 package com.QuickBites.app.entities;
 
+import java.math.BigDecimal;
+
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
@@ -23,6 +25,12 @@ public class DeliveryAgent {
 	
 	@Column(nullable=false)
 	private String drivingLicense;
+	
+	@Column(nullable=false)
+	private boolean isActive;
+	
+	
+	private BigDecimal totalEarning = BigDecimal.ZERO;
 	
 	@OneToOne
 	@JoinColumn(name="_userId")
@@ -59,6 +67,18 @@ public class DeliveryAgent {
 	}
 	public void setDrivingLicense(String drivingLicense) {
 		this.drivingLicense = drivingLicense;
+	}
+	public boolean isActive() {
+		return isActive;
+	}
+	public void setActive(boolean isActive) {
+		this.isActive = isActive;
+	}
+	public BigDecimal getTotalEarning() {
+		return totalEarning;
+	}
+	public void setTotalEarning(BigDecimal totalEarning) {
+		this.totalEarning = totalEarning;
 	}
 	
 	

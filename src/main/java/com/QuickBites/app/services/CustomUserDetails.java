@@ -44,5 +44,9 @@ public class CustomUserDetails implements UserDetails {
 	public boolean isAccountNonLocked() {
 		return true;
 	}
+
+	public User getUser() {
+		return user;
+	}
 	
 }
