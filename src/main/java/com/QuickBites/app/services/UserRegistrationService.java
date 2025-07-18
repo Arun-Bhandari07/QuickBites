@@ -102,6 +102,7 @@ public class UserRegistrationService {
 		agent.setCitizenshipPhotoFront(pendingUser.getCitizenshipPhotoFront());
 		agent.setCitizenshipPhotoBack(pendingUser.getCitizenshipPhotoBack());
 		agent.setDrivingLicense(pendingUser.getDriverLicense());
+		agent.setActive(true);
 		agent.setUser(user);
 		
 		agentRepo.save(agent);

@@ -6,6 +6,8 @@ import java.util.List;
 
 import org.hibernate.annotations.CreationTimestamp;
 
+import com.QuickBites.app.enums.DeliveryStatus;
+import com.QuickBites.app.enums.KitchenStatus;
 import com.QuickBites.app.enums.OrderStatus;
 import com.QuickBites.app.enums.PaymentMethod;
 import com.fasterxml.jackson.annotation.JsonManagedReference;
@@ -19,6 +21,7 @@ import jakarta.persistence.Enumerated;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
+import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
@@ -42,10 +45,13 @@ public class Order {
 
     @Column(name="orderStatus")
     @Enumerated(EnumType.STRING)
-    private OrderStatus status; 
+    private OrderStatus orderStatus; 
 
     @CreationTimestamp
     private LocalDateTime createdAt;
+    
+    @Column(nullable =true)
+    private BigDecimal deliveryCharge  = BigDecimal.ZERO;
     
     @Embedded
 	LocationInfo locationInfo;
@@ -56,6 +62,16 @@ public class Order {
     
     @Enumerated(EnumType.STRING)
     private PaymentMethod paymentMethod;
+    
+    @Enumerated(EnumType.STRING)
+    private KitchenStatus kitchenStatus;
+    
+    @Enumerated(EnumType.STRING)
+    private DeliveryStatus deliveryStatus;
+    
+    @ManyToOne
+    @JoinColumn(name = "delivery_agent_id")
+    private DeliveryAgent assignedAgent;
     
 
 	public LocationInfo getLocationInfo() {
@@ -98,12 +114,12 @@ public class Order {
 		this.totalAmount = totalAmount;
 	}
 
-	public OrderStatus getStatus() {
-		return status;
+	public OrderStatus getOrderStatus() {
+		return orderStatus;
 	}
 
-	public void setStatus(OrderStatus status) {
-		this.status = status;
+	public void setOrderStatus(OrderStatus status) {
+		this.orderStatus = status;
 	}
 
 	public LocalDateTime getCreatedAt() {
@@ -137,6 +153,38 @@ public class Order {
 
 	public void setSpecialInstructions(String specialInstructions) {
 		this.specialInstructions = specialInstructions;
+	}
+
+	public DeliveryAgent getAssignedAgent() {
+		return assignedAgent;
+	}
+
+	public void setAssignedAgent(DeliveryAgent assignedAgent) {
+		this.assignedAgent = assignedAgent;
+	}
+
+	public KitchenStatus getKitchenStatus() {
+		return kitchenStatus;
+	}
+
+	public void setKitchenStatus(KitchenStatus kitchenStatus) {
+		this.kitchenStatus = kitchenStatus;
+	}
+
+	public DeliveryStatus getDeliveryStatus() {
+		return deliveryStatus;
+	}
+
+	public void setDeliveryStatus(DeliveryStatus deliveryStatus) {
+		this.deliveryStatus = deliveryStatus;
+	}
+
+	public BigDecimal getDeliveryCharge() {
+		return deliveryCharge;
+	}
+
+	public void setDeliveryCharge(BigDecimal deliveryCharge) {
+		this.deliveryCharge = deliveryCharge;
 	}
 
 	

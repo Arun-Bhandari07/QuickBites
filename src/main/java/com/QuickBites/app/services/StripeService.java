@@ -36,8 +36,8 @@ public class StripeService {
 		
 		SessionCreateParams.Builder builder = SessionCreateParams.builder()
 				.setMode(SessionCreateParams.Mode.PAYMENT)
-				.setSuccessUrl(stripeSuccessUrl+orderId)
-				.setCancelUrl(stripeFailureUrl+orderId);
+				.setSuccessUrl(stripeSuccessUrl)
+				.setCancelUrl(stripeFailureUrl);
 		
 		
 		for(OrderItem item:order.getItems()) {
@@ -61,7 +61,23 @@ public class StripeService {
 						
 			builder.addLineItem(lineItem);
 		}
+		long deliveryChargeInPaisa = order.getDeliveryCharge()
+				.multiply(BigDecimal.valueOf(100)).longValue();
 		
+		SessionCreateParams.LineItem deliveryChargeItem = SessionCreateParams.LineItem.builder()
+					.setQuantity(1L)
+					.setPriceData(
+							SessionCreateParams.LineItem.PriceData.builder()
+							.setCurrency("npr")
+							.setUnitAmount(deliveryChargeInPaisa)
+							.setProductData(
+									SessionCreateParams.LineItem.PriceData.ProductData.builder()
+									   .setName("Delivery Charge")
+									   .build()
+									).build()
+							).build();
+	
+		builder.addLineItem(deliveryChargeItem);
 		builder.putMetadata("orderId", order.getId().toString());
 		
 		SessionCreateParams params = builder.build();

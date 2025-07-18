@@ -2,6 +2,7 @@
 package com.QuickBites.app.entities;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -74,7 +75,7 @@ public class User {
 	
 	
 	@OneToMany(mappedBy ="user",cascade=CascadeType.ALL,orphanRemoval=true)
-	private List<Address> address;
+	private List<Address> address = new ArrayList<>();
 	
 	
 	public int getId() {

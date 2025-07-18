@@ -11,6 +11,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.QuickBites.app.entities.Order;
+import com.QuickBites.app.enums.KitchenStatus;
 import com.QuickBites.app.enums.OrderStatus;
 import com.QuickBites.app.repositories.OrderRepository;
 import com.stripe.exception.SignatureVerificationException;
@@ -71,8 +72,9 @@ public class StripeWebhookController {
     			Long orderId = Long.valueOf(orderIdStr);
     			Order order = orderRepo.findById(orderId)
     						.orElse(null);
-    				if(order!=null && order.getStatus()==OrderStatus.PREPARING) {
-    					order.setStatus(OrderStatus.PAID);
+    				if(order!=null && order.getOrderStatus()==OrderStatus.PENDING_PAYMENT) {
+    					order.setOrderStatus(OrderStatus.PAID);
+    					order.setKitchenStatus(KitchenStatus.PREPARING);
     					orderRepo.save(order);
     					System.out.println("Order #"+orderId+" marked as PAID");
     				}

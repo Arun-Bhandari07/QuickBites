@@ -7,9 +7,12 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Service;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 
 import com.QuickBites.app.AdminOrderMetrics;
 import com.QuickBites.app.DTO.AdminOrderMetricsDTO;
@@ -28,6 +31,8 @@ import com.QuickBites.app.entities.LocationInfo;
 import com.QuickBites.app.entities.Order;
 import com.QuickBites.app.entities.OrderItem;
 import com.QuickBites.app.entities.User;
+import com.QuickBites.app.enums.DeliveryStatus;
+import com.QuickBites.app.enums.KitchenStatus;
 import com.QuickBites.app.enums.OrderStatus;
 import com.QuickBites.app.enums.PaymentMethod;
 import com.QuickBites.app.repositories.AddressRepository;
@@ -43,22 +48,26 @@ public class OrderService {
     private final StripeService stripeService;
     private final CartItemRepository cartItemRepo;
     private final AddressRepository addressRepo;
+    private final DeliveryChargeService deliveryChargeService;
 
     
     public OrderService(OrderRepository orderRepo,
                         UserRepository userRepo,     
                         StripeService stripeService,
                         CartItemRepository cartItemRepo
-                        ,AddressRepository addressRepo) {
+                        ,AddressRepository addressRepo
+                        ,DeliveryChargeService deliveryChargeService) {
         this.orderRepo = orderRepo;
         this.userRepo = userRepo;
         this.stripeService = stripeService;
         this.cartItemRepo=cartItemRepo;
         this.addressRepo=addressRepo;
+        this.deliveryChargeService=deliveryChargeService;
     }
 
     public PlaceOrderResponse placeOrder(PlaceOrderRequestDTO req, String username){
     	LocationInfo location;
+    	BigDecimal deliveryCharge;
     	
     	
         User user = userRepo.findByUserName(username)
@@ -85,17 +94,20 @@ public class OrderService {
             location.setLatitude(address.getLatitude());
             location.setLongitude(address.getLongitude());
             location.setDeliveryAddress(address.getFullAddress());
+            deliveryCharge = deliveryChargeService.calculateDeliveryCharge(address.getLatitude(), address.getLongitude());
         } else {
             location = req.getLocationInfo(); // use manual input
+            deliveryCharge = deliveryChargeService.calculateDeliveryCharge(location.getLatitude(), location.getLongitude());
         }
         
         Order order = new Order();
         order.setUser(user);
-        order.setStatus(OrderStatus.PENDING_PAYMENT);
+        order.setOrderStatus(OrderStatus.PENDING_PAYMENT);
         order.setCreatedAt(LocalDateTime.now());
         order.setSpecialInstructions(req.getSpecialInstructions());
         order.setLocationInfo(location);
         order.setPhone(req.getPhoneNumber());
+        order.setDeliveryCharge(deliveryCharge);
 
         List<OrderItem> orderItems = new ArrayList<>();
         BigDecimal totalAmount = BigDecimal.ZERO;
@@ -122,18 +134,24 @@ public class OrderService {
         }
         order.setItems(orderItems);
         order.setTotalAmount(totalAmount);
+        
+        if(order.getTotalAmount().compareTo(BigDecimal.valueOf(1200))>0) {
+        	order.setDeliveryCharge(BigDecimal.valueOf(0.00));
+        }
    
         System.out.println(req.getPaymentMethod());
         
         if (req.getPaymentMethod() == PaymentMethod.STRIPE) {
         	order.setPaymentMethod(PaymentMethod.STRIPE);
-        	order.setStatus(OrderStatus.PENDING_PAYMENT);
-            
+        	order.setOrderStatus(OrderStatus.PENDING_PAYMENT);
+          
         } else if (req.getPaymentMethod() == PaymentMethod.COD) {
         	order.setPaymentMethod(PaymentMethod.COD);
-            order.setStatus(OrderStatus.PREPARING); 
-           
+            order.setOrderStatus(OrderStatus.PENDING_PAYMENT); 
+          
         }
+        order.setKitchenStatus(KitchenStatus.TO_BE_PREPARED);
+    	order.setDeliveryStatus(DeliveryStatus.TO_BE_DELIVERED);
         Order savedOrder = orderRepo.save(order);
        String stripeUrl = req.getPaymentMethod() == PaymentMethod.STRIPE
     		   ?stripeService.makePayment(savedOrder):null;
@@ -175,9 +193,13 @@ public class OrderService {
         return new OrderResponseDTO(
             order.getId(),
             order.getTotalAmount(),
-            order.getStatus().name(),
+            order.getOrderStatus().name(),
             order.getCreatedAt(),
-            itemDTOs
+            itemDTOs,
+            order.getPaymentMethod(),
+            order.getOrderStatus(),
+            order.getKitchenStatus(),
+            order.getDeliveryStatus()
         );
     }
     
@@ -211,7 +233,7 @@ public class OrderService {
         Order order = orderRepo.findById(orderId)
             .orElseThrow(() -> new ResourceNotFoundException("Order not found"));
 
-        if (order.getStatus() != OrderStatus.PENDING_PAYMENT) {
+        if (order.getOrderStatus() != OrderStatus.PENDING_PAYMENT) {
             throw new IllegalStateException("Order is already paid or canceled");
         }
 
@@ -219,9 +241,6 @@ public class OrderService {
     }
 
     public void cancelOrder(Long id, Authentication authentication) {
-    	//first Check if order exists and belong to current user
-    	//check the time of order , if less than 2 minutes simply cancel order
-    	//if more than 2 minutes, decrease the trust score of User
     	
     	 Order order = orderRepo.findByIdAndUserUserName(id,authentication.getName())
     			 .orElseThrow(()->new ResourceNotFoundException("Cannot find order with given id "+id));
@@ -233,14 +252,14 @@ public class OrderService {
     		 userRepo.save(user);
     	 }
     	 
-    	 order.setStatus(OrderStatus.CANCELLED);
+    	 order.setDeliveryStatus(DeliveryStatus.CANCELLED);
     	 orderRepo.save(order);
-    	 
-    	 
-    	 
+ 	 
     }
     
+   
     
+
     
 }
 

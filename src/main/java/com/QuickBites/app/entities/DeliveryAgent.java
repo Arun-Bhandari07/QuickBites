@@ -1,6 +1,7 @@
 package com.QuickBites.app.entities;
 
 import java.math.BigDecimal;
+import java.time.LocalDateTime;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -15,7 +16,7 @@ public class DeliveryAgent {
 
 	@Id
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
-	private int id;
+	private Long id;
 	
 	@Column(nullable=false)
 	private String citizenshipPhotoFront;
@@ -29,6 +30,7 @@ public class DeliveryAgent {
 	@Column(nullable=false)
 	private boolean isActive;
 	
+	private LocalDateTime lastSeen;
 	
 	private BigDecimal totalEarning = BigDecimal.ZERO;
 	
@@ -56,10 +58,10 @@ public class DeliveryAgent {
 	public void setUser(User user) {
 		this.user = user;
 	}
-	public int getId() {
+	public Long getId() {
 		return id;
 	}
-	public void setId(int id) {
+	public void setId(Long id) {
 		this.id = id;
 	}
 	public String getDrivingLicense() {
@@ -80,7 +82,11 @@ public class DeliveryAgent {
 	public void setTotalEarning(BigDecimal totalEarning) {
 		this.totalEarning = totalEarning;
 	}
-	
-	
-	
+	public LocalDateTime getLastSeen() {
+		return lastSeen;
+	}
+	public void setLastSeen(LocalDateTime lastSeen) {
+		this.lastSeen = lastSeen;
+	}
+		
 }

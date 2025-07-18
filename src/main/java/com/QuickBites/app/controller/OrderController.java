@@ -1,5 +1,6 @@
 package com.QuickBites.app.controller;
 
+import java.math.BigDecimal;
 import java.util.List;
 import java.util.Map;
 
@@ -18,6 +19,7 @@ import com.QuickBites.app.DTO.OrderResponseDTO;
 import com.QuickBites.app.DTO.PlaceOrderRequestDTO;
 import com.QuickBites.app.DTO.PlaceOrderResponse;
 import com.QuickBites.app.entities.Order;
+import com.QuickBites.app.services.DeliveryChargeService;
 import com.QuickBites.app.services.OrderService;
 
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -29,9 +31,14 @@ import jakarta.validation.Valid;
 public class OrderController {
 
     private final OrderService orderService;
+    private final DeliveryChargeService deliveryChargeService;
     
-    public OrderController(OrderService orderService) {
+    private record deliveryLocation(double lat , double lon) {};
+    
+    
+    public OrderController(OrderService orderService,DeliveryChargeService deliveryChargeService) {
     	this.orderService=orderService;
+    	this.deliveryChargeService=deliveryChargeService;
     }
 
     @PostMapping("/place")
@@ -74,4 +81,13 @@ public class OrderController {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of("error", ex.getMessage()));
         }
     }
+    
+    @PostMapping("/deliveryCharge")
+    public ResponseEntity<?> calculateDeliveryCharge(@RequestBody deliveryLocation location){
+		System.out.println(location.lat());
+		System.out.println(location.lon());
+    	BigDecimal charge = deliveryChargeService.calculateDeliveryCharge(location.lat(), location.lon());
+    	return ResponseEntity.ok().body(charge);
+    }
+    
 }
