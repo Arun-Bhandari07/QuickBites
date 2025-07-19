@@ -97,7 +97,12 @@ public class ImageService {
 		}
 		path = path.resolve(imageName).normalize().toAbsolutePath();
 		try {
-			Files.deleteIfExists(path);
+			boolean deleted = Files.deleteIfExists(path);
+			if(deleted) {
+				logger.info("SUCCESS: The file was found and deleted.");
+			}else {
+				logger.warn("FAILURE: The file was NOT found at the specified path: {}", path);
+			}
 		} catch (IOException ex) {
 			throw new FileHandlingException("Error on deleting image:"+imageName+" "+ex.getMessage(),ex);
 		}

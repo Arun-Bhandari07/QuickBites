@@ -110,8 +110,8 @@ public class AdminController {
 	        @PathVariable Long pendingUserId,
 	        @RequestBody AgentRejectionRequest rejectionRequest) {
 	    try {
-	        deliveryAgentService.rejectAgentById(pendingUserId, rejectionRequest.getReason());
-	        return ResponseEntity.ok(Map.of("message", "Agent rejected successfully"));
+	        String message = deliveryAgentService.rejectAgentById(pendingUserId, rejectionRequest);
+	        return ResponseEntity.ok(Map.of("message", message));
 	    } catch (ResourceNotFoundException | FileStorageException ex) {
 	        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(Map.of("error", ex.getMessage()));
 	    }

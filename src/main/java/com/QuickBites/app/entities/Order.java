@@ -73,6 +73,8 @@ public class Order {
     @JoinColumn(name = "delivery_agent_id")
     private DeliveryAgent assignedAgent;
     
+    private String verificationOtp;
+    
 
 	public LocationInfo getLocationInfo() {
 		return locationInfo;
@@ -185,6 +187,14 @@ public class Order {
 
 	public void setDeliveryCharge(BigDecimal deliveryCharge) {
 		this.deliveryCharge = deliveryCharge;
+	}
+
+	public String getVerificationOtp() {
+		return verificationOtp;
+	}
+
+	public void setVerificationOtp(String verificationOtp) {
+		this.verificationOtp = verificationOtp;
 	}
 
 	

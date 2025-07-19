@@ -40,6 +40,13 @@ public class OrderController {
     	this.orderService=orderService;
     	this.deliveryChargeService=deliveryChargeService;
     }
+    
+    @GetMapping
+    public ResponseEntity<List<OrderResponseDTO>> getOrdersForUser(Authentication authentication) {
+    	String username = authentication.getName();
+    	List<OrderResponseDTO> dtoList = orderService.getOrdersForUser(username);
+        return ResponseEntity.ok(dtoList);
+    }
 
     @PostMapping("/place")
     public ResponseEntity<PlaceOrderResponse> placeOrder(@Valid
@@ -65,12 +72,7 @@ public class OrderController {
         return ResponseEntity.ok(dto);
     }
 
-    @GetMapping
-    public ResponseEntity<List<OrderResponseDTO>> getOrdersForUser(Authentication authentication) {
-    	String username = authentication.getName();
-    	List<OrderResponseDTO> dtoList = orderService.getOrdersForUser(username);
-        return ResponseEntity.ok(dtoList);
-    }
+   
       
     @PostMapping("/{orderId}/retry-checkout")
     public ResponseEntity<?> retryPayment(@PathVariable Long orderId) {

@@ -49,6 +49,7 @@ public class OrderService {
     private final AddressRepository addressRepo;
     private final DeliveryChargeService deliveryChargeService;
     private final SimpMessagingTemplate simpMessagingTemplate;
+    private final OTPService otpService;
 
     
     public OrderService(OrderRepository orderRepo,
@@ -57,7 +58,8 @@ public class OrderService {
                         CartItemRepository cartItemRepo
                         ,AddressRepository addressRepo
                         ,DeliveryChargeService deliveryChargeService
-                        ,SimpMessagingTemplate simpMessagingTemplate) {
+                        ,SimpMessagingTemplate simpMessagingTemplate
+                        ,OTPService otpService) {
         this.orderRepo = orderRepo;
         this.userRepo = userRepo;
         this.stripeService = stripeService;
@@ -65,6 +67,7 @@ public class OrderService {
         this.addressRepo=addressRepo;
         this.deliveryChargeService=deliveryChargeService;
         this.simpMessagingTemplate=simpMessagingTemplate;
+        this.otpService=otpService;
     }
 
     public PlaceOrderResponse placeOrder(PlaceOrderRequestDTO req, String username){
@@ -154,6 +157,7 @@ public class OrderService {
         }
         order.setKitchenStatus(KitchenStatus.TO_BE_PREPARED);
     	order.setDeliveryStatus(DeliveryStatus.TO_BE_DELIVERED);
+    	order.setVerificationOtp(otpService.generateOTP());
         Order savedOrder = orderRepo.save(order);
        String stripeUrl = req.getPaymentMethod() == PaymentMethod.STRIPE
     		   ?stripeService.makePayment(savedOrder):null;
@@ -192,7 +196,7 @@ public class OrderService {
             );
         }).collect(Collectors.toList());
 
-        return new OrderResponseDTO(
+        OrderResponseDTO responseDTO =  new OrderResponseDTO(
             order.getId(),
             order.getTotalAmount(),
             order.getOrderStatus().name(),
@@ -203,6 +207,9 @@ public class OrderService {
             order.getKitchenStatus(),
             order.getDeliveryStatus()
         );
+        responseDTO.setVerificationOtp(order.getVerificationOtp());
+        return responseDTO;
+        
     }
     
     

@@ -30,6 +30,9 @@ public class DeliveryAgent {
 	@Column(nullable=false)
 	private boolean isActive;
 	
+	@Column(nullable=false)
+	private boolean isAvailable = false;
+	
 	private LocalDateTime lastSeen;
 	
 	private BigDecimal totalEarning = BigDecimal.ZERO;
@@ -88,5 +91,13 @@ public class DeliveryAgent {
 	public void setLastSeen(LocalDateTime lastSeen) {
 		this.lastSeen = lastSeen;
 	}
+	public boolean isAvailable() {
+		return isAvailable;
+	}
+	public void setAvailable(boolean isAvailable) {
+		this.isAvailable = isAvailable;
+	}
 		
+	
+	
 }

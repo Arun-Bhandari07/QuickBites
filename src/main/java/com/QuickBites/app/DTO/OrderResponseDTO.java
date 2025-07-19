@@ -20,6 +20,7 @@ public class OrderResponseDTO {
     private OrderStatus orderStatus;
     private KitchenStatus kitchenStatus;
     private DeliveryStatus deliveryStatus;
+    private String verificationOtp;
 
   
     public OrderResponseDTO() {
@@ -121,5 +122,16 @@ public class OrderResponseDTO {
 	public void setDeliveryStatus(DeliveryStatus deliveryStatus) {
 		this.deliveryStatus = deliveryStatus;
 	}
+
+
+	public String getVerificationOtp() {
+		return verificationOtp;
+	}
+
+
+	public void setVerificationOtp(String verificationOtp) {
+		this.verificationOtp = verificationOtp;
+	}
+	
     
 }

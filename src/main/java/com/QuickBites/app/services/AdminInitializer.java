@@ -22,6 +22,11 @@ public class AdminInitializer {
 	@Autowired
 	UserRoleRepository userRoleRepo;
 
+	@Autowired
+	OTPService otpService;
+	
+	
+	
 	
 	@PostConstruct
 	public void testInitializer() {

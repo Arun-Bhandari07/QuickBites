@@ -1,11 +1,6 @@
 package com.QuickBites.app.DTO;
 
-import java.util.List;
-
-import com.QuickBites.app.entities.Address;
-
 import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
 
 public class UpdateProfileDTO {
@@ -20,8 +15,8 @@ public class UpdateProfileDTO {
     @NotBlank(message = "Phone number cannot be blank")
 	private String phone;
 
-    @NotNull(message = "Address cannot be blank")
-	private List<Address> address;
+//    @NotNull(message = "Address cannot be blank")
+//	private List<Address> address;
 
 	public String getFirstName() {
 		return firstName;
@@ -47,11 +42,11 @@ public class UpdateProfileDTO {
 		this.phone = phone;
 	}
 
-	public List<Address> getAddress() {
-		return address;
-	}
-
-	public void setAddress(List<Address> address) {
-		this.address = address;
-	}
+//	public List<Address> getAddress() {
+//		return address;
+//	}
+//
+//	public void setAddress(List<Address> address) {
+//		this.address = address;
+//	}
 }

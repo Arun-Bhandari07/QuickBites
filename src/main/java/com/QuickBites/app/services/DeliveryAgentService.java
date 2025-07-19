@@ -8,16 +8,19 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
+import com.QuickBites.app.DTO.AgentRejectionRequest;
 import com.QuickBites.app.DTO.AgentResponseDTO;
 import com.QuickBites.app.Exception.FileStorageException;
 import com.QuickBites.app.Exception.ResourceNotFoundException;
 import com.QuickBites.app.entities.DeliveryAgent;
 import com.QuickBites.app.entities.PendingUser;
+import com.QuickBites.app.entities.ReapplyToken;
 import com.QuickBites.app.enums.ImageType;
 import com.QuickBites.app.enums.RoleName;
 import com.QuickBites.app.mapper.DeliveryAgentMapper;
 import com.QuickBites.app.repositories.DeliveryAgentRepository;
 import com.QuickBites.app.repositories.PendingUserRepository;
+import com.QuickBites.app.repositories.ReapplyTokenRepository;
 
 @Service
 public class DeliveryAgentService {
@@ -36,6 +39,9 @@ public class DeliveryAgentService {
 	
 	@Autowired
 	private DeliveryAgentRepository deliveryAgentRepo;
+	
+	@Autowired
+	private ReapplyTokenRepository reapplyTokenRepo;
 	
 	
 	public List<AgentResponseDTO> getAllAgents() {
@@ -65,13 +71,26 @@ public class DeliveryAgentService {
 		return true;
 	}
 	
-	public void rejectAgentById(Long id, String reason) {
+	public String rejectAgentById(Long id, AgentRejectionRequest rejectionRequest) {
 	    PendingUser pendingUser = pendingUserRepo.findById(id)
 	        .orElseThrow(() -> new ResourceNotFoundException("Agent not found"));
 
 	    if (!pendingUser.getRoleName().equals(RoleName.ROLE_DELIVERYAGENT)) {
 	        throw new IllegalStateException("User is not a delivery agent");
 	    }
+	    
+	    String reason = rejectionRequest.getReason();
+        
+        if(rejectionRequest.isAllowReapply()) {
+        	ReapplyToken token =new ReapplyToken(pendingUser.getId());
+        	reapplyTokenRepo.save(token);
+        	
+        	//send the mail with the reapply link
+            mailService.sendAgentRejectionWithReapplyLinkEmail(pendingUser.getEmail(), reason, token.getToken());
+            return "Agent rejected but allowed to reapply. A reapplication link has been sent.";
+
+        }
+	    
 	    try {
 	        imageService.deleteImage(pendingUser.getCitizenshipPhotoFront(),ImageType.DELIVERYAGENTREQUEST);
 	        imageService.deleteImage(pendingUser.getCitizenshipPhotoBack(),ImageType.DELIVERYAGENTREQUEST);
@@ -82,6 +101,7 @@ public class DeliveryAgentService {
 
 	    pendingUserRepo.delete(pendingUser);
 	    mailService.sendAgentRejectionEmail(pendingUser.getEmail(), reason);
+	    return "Agent has been permanently rejected and their data has been deleted.";
 	}
 	
 	public ResponseEntity<String> setOnline(Long id) {

@@ -3,6 +3,7 @@ package com.QuickBites.app.services;
 import java.io.UnsupportedEncodingException;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.mail.javamail.MimeMessageHelper;
 import org.springframework.scheduling.annotation.Async;
@@ -18,6 +19,9 @@ public class MailService {
 
     @Autowired
     OTPService otpService;
+    
+    @Value("${quickbites.frontend.base-url}")
+    private String frontendBaseUrl; 
 
     private final JavaMailSender mailSender;
     private final int OTP_VALIDITY_PERIOD = 5;
@@ -113,11 +117,11 @@ public class MailService {
     public  void sendAgentApprovalEmail(String email,String userName) {
         try {
        
-            // Build HTML template
+          
             String content = emailTemplateBuilderAgentApproved(userName);
-            String subject = "🎉 You're officially a QuickBites Delivery Agent!";
+            String subject = " You're officially a QuickBites Delivery Agent!";
 
-            // Send it
+         
             MimeMessage mimeMessage = mailSender.createMimeMessage();
             MimeMessageHelper helper = new MimeMessageHelper(mimeMessage, true, "UTF-8");
             helper.setFrom(emailSender, "Quick Bites Support");
@@ -171,7 +175,27 @@ public class MailService {
             alertContent
         );
     }
+    @Async("taskExecutor")
+    public void sendAgentRejectionWithReapplyLinkEmail(String email, String reason, String token) {
+        try {
+            String userName = email.contains("@") ? email.substring(0, email.indexOf("@")) : "Applicant";
+            
+            String reapplyUrl = frontendBaseUrl + "/agent/reapply/" + token; 
 
+            String content = emailTemplateBuilderAgentReapply(userName, reason, reapplyUrl);
+            String subject = "Update on your QuickBites Application & Chance to Reapply";
+
+            MimeMessage mimeMessage = mailSender.createMimeMessage();
+            MimeMessageHelper helper = new MimeMessageHelper(mimeMessage, true, "UTF-8");
+            helper.setFrom(emailSender, "Quick Bites Support");
+            helper.setTo(email);
+            helper.setSubject(subject);
+            helper.setText(content, true);
+            mailSender.send(mimeMessage);
+        } catch (UnsupportedEncodingException | MessagingException ex) {
+            throw new EmailMessagingException("Failed to send agent reapply email", ex);
+        }
+    }
 
     // --- TEMPLATE BUILDERS ---
 
@@ -273,6 +297,33 @@ public class MailService {
                 </div>
             </div>
             """.formatted(userName, reason, java.time.Year.now().getValue());
+    }
+    
+    private String emailTemplateBuilderAgentReapply(String userName, String reason, String reapplyUrl) {
+        return """
+            <div style="font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; line-height: 1.6; color: #333;">
+                <div style="max-width: 620px; margin: 25px auto; padding: 30px; border: 1px solid #e0e0e0; border-radius: 10px; background-color: #ffffff;">
+                    <h2 style="text-align: center; color: #ffc107;">Update on Your QuickBites Application</h2>
+                    <p>Dear %s,</p>
+                    <p>Thank you for your interest in becoming a Delivery Agent with <strong>QuickBites</strong>. After reviewing your application, we found some information that needs to be updated.</p>
+                    <p><strong>Reason provided:</strong></p>
+                    <blockquote style="background-color: #fff3cd; border-left: 5px solid #ffc107; padding: 12px; font-style: italic; margin: 20px 0;">
+                        %s
+                    </blockquote>
+                    <p>The good news is, we are giving you an opportunity to correct your application and resubmit it.</p>
+                    <p style="text-align: center; margin: 30px 0;">
+                        <a href="%s" style="background-color: #007bff; color: white; padding: 15px 25px; text-decoration: none; border-radius: 5px; font-size: 16px;">Re-apply Now</a>
+                    </p>
+                    <p>Please note that this link is valid for <strong>24 hours</strong> only and can only be used once.</p>
+                    <p>We appreciate your cooperation and look forward to your updated application.</p>
+                    <p style="margin-top: 30px;">Best regards,<br><strong>The QuickBites Team</strong></p>
+                </div>
+                <div style="text-align: center; font-size: 12px; color: #777; margin-top: 20px;">
+                    This is an automated message. Please do not reply directly to this email.<br>
+                    QuickBites © %d
+                </div>
+            </div>
+            """.formatted(userName, reason, reapplyUrl, java.time.Year.now().getValue());
     }
 
     

@@ -11,6 +11,9 @@ import com.QuickBites.app.UserExistence;
 import com.QuickBites.app.entities.PendingUser;
 
 public interface PendingUserRepository extends JpaRepository<PendingUser,Integer> {
+	boolean existsById(Long id);
+	boolean existsByUserName(String userName);
+	
 	@Query("SELECT p.userName AS userName, p.email AS email FROM PendingUser p WHERE p.userName=:userName OR email=:email")
 	List<UserExistence> findConflicts(@Param("userName")String userName,@Param("email") String email);
 	
