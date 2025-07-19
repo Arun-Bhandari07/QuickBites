@@ -7,16 +7,15 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
-import org.springframework.http.ResponseEntity;
+import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Service;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
 
 import com.QuickBites.app.AdminOrderMetrics;
 import com.QuickBites.app.DTO.AdminOrderMetricsDTO;
 import com.QuickBites.app.DTO.CartItemRequestDTO;
+import com.QuickBites.app.DTO.KitchenUpdateEventDTO;
 import com.QuickBites.app.DTO.OrderItemResponseDTO;
 import com.QuickBites.app.DTO.OrderResponseDTO;
 import com.QuickBites.app.DTO.PlaceOrderRequestDTO;
@@ -49,6 +48,7 @@ public class OrderService {
     private final CartItemRepository cartItemRepo;
     private final AddressRepository addressRepo;
     private final DeliveryChargeService deliveryChargeService;
+    private final SimpMessagingTemplate simpMessagingTemplate;
 
     
     public OrderService(OrderRepository orderRepo,
@@ -56,13 +56,15 @@ public class OrderService {
                         StripeService stripeService,
                         CartItemRepository cartItemRepo
                         ,AddressRepository addressRepo
-                        ,DeliveryChargeService deliveryChargeService) {
+                        ,DeliveryChargeService deliveryChargeService
+                        ,SimpMessagingTemplate simpMessagingTemplate) {
         this.orderRepo = orderRepo;
         this.userRepo = userRepo;
         this.stripeService = stripeService;
         this.cartItemRepo=cartItemRepo;
         this.addressRepo=addressRepo;
         this.deliveryChargeService=deliveryChargeService;
+        this.simpMessagingTemplate=simpMessagingTemplate;
     }
 
     public PlaceOrderResponse placeOrder(PlaceOrderRequestDTO req, String username){
@@ -255,6 +257,10 @@ public class OrderService {
     	 order.setDeliveryStatus(DeliveryStatus.CANCELLED);
     	 orderRepo.save(order);
  	 
+    	 //WebSocket Broadcast to kitchen 
+    	    KitchenUpdateEventDTO event = new KitchenUpdateEventDTO(order.getId(), order.getDeliveryStatus().name());
+    	    simpMessagingTemplate.convertAndSend("/topic/kitchen",event);
+    	 
     }
     
    

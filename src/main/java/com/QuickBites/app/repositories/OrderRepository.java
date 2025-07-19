@@ -17,6 +17,12 @@ public interface OrderRepository extends JpaRepository<Order, Long> {
 
     Optional<Order> findByIdAndUserUserName(Long orderId, String username);
     
+    @Query("SELECT o from Order o "
+    		+ "WHERE o.kitchenStatus IN ('TO_BE_PREPARED','PREPARING','READY')"
+    		+ "AND o.deliveryStatus IN ('TO_BE_DELIVERED','CANCELLED')"
+    		+ "ORDER BY o.createdAt DESC")
+    List<Order> findOrderForKitchenDashboard();
+    
     @Query(value = "SELECT COUNT(*) AS total_orders, " +
     	       "COUNT(*) FILTER (WHERE DATE(created_at) = CURRENT_DATE) AS orders_today, " +
     	       "COUNT(*) FILTER (WHERE DATE(created_at) = CURRENT_DATE - INTERVAL '1 day') AS orders_yesterday, " +

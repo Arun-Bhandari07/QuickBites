@@ -2,16 +2,19 @@ package com.QuickBites.app.controller;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
-import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
 
 import com.QuickBites.app.repositories.DeliveryAgentRepository;
 import com.QuickBites.app.services.DeliveryAgentService;
 
-@Controller
+import io.swagger.v3.oas.annotations.tags.Tag;
+
+@RestController
 @RequestMapping("/agent")
+@Tag(name="Delivery-Agent ")
 public class DeliveryAgentController {
 	
 	@Autowired
