@@ -88,10 +88,7 @@ public class AdminController {
 	
 	@GetMapping("/agents")
 	public List<AgentResponseDTO> getAllAgents(@RequestParam(name="isActive") Optional<Boolean> isActive){
-		if(isActive.isPresent()) {
-			List<AgentResponseDTO> agents= deliveryAgentService.getAllAgentsByStatus(isActive.get());
-			return agents;
-		}
+		
 		return deliveryAgentService.getAllAgents();
 	}
 	

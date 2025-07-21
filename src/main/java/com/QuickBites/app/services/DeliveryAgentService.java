@@ -1,11 +1,9 @@
 package com.QuickBites.app.services;
 
-import java.time.LocalDateTime;
 import java.util.List;
 import java.util.stream.Collectors;
 
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
 import com.QuickBites.app.DTO.AgentRejectionRequest;
@@ -53,13 +51,7 @@ public class DeliveryAgentService {
 			
 	}
 
-	public List<AgentResponseDTO> getAllAgentsByStatus(boolean status){
-		List<DeliveryAgent> agents = deliveryAgentRepo.findByIsActive(status);
-		List<AgentResponseDTO> res = 	agents.stream()
-				.map(agent->DeliveryAgentMapper.entityToDto(agent))
-				.collect(Collectors.toList());
-		return res;
-	}
+	
 	
 	public boolean approveAgentById(Long id) {
 		PendingUser pendingUser = pendingUserRepo.findById(id)
@@ -104,31 +96,7 @@ public class DeliveryAgentService {
 	    return "Agent has been permanently rejected and their data has been deleted.";
 	}
 	
-	public ResponseEntity<String> setOnline(Long id) {
-		DeliveryAgent agent = deliveryAgentRepo.findById(id)
-				.orElseThrow(()-> new ResourceNotFoundException("Cannot find delivery agent with id"+id));
-		agent.setActive(true);
-		agent.setLastSeen(LocalDateTime.now());
-		deliveryAgentRepo.save(agent);
-		return ResponseEntity.ok("Agent is now online");
-	}
 	
-	public ResponseEntity<String> setOffline(Long id){
-		DeliveryAgent agent = deliveryAgentRepo.findById(id)
-				.orElseThrow(()->new ResourceNotFoundException("Cannot find delivery agent with id"+id));
-		agent.setActive(false);
-		deliveryAgentRepo.save(agent);
-		return ResponseEntity.ok("Delivery Agent marked offline");
-		
-	}
-	
-	public ResponseEntity<String> updateLastSeen(Long id){
-		DeliveryAgent agent = deliveryAgentRepo.findById(id)
-				.orElseThrow(()->new ResourceNotFoundException("Cannot find delivery agent with id"+id));
-		agent.setLastSeen(LocalDateTime.now());
-		deliveryAgentRepo.save(agent);
-		return ResponseEntity.ok("Update Last Seen");
-	}
 	
 	
 }

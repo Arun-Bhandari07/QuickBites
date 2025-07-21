@@ -13,13 +13,13 @@ public class OrderResponseDTO {
 
     private Long orderId;
     private BigDecimal totalAmount;
-    private String status;
     private LocalDateTime createdAt;
     private List<OrderItemResponseDTO> items;
     private PaymentMethod paymentMethod;
     private OrderStatus orderStatus;
     private KitchenStatus kitchenStatus;
     private DeliveryStatus deliveryStatus;
+    private Long deliveryTime;
     private String verificationOtp;
 
   
@@ -27,19 +27,21 @@ public class OrderResponseDTO {
     }
 
     
-    public OrderResponseDTO(Long orderId, BigDecimal totalAmount, String status,
+    public OrderResponseDTO(Long orderId, BigDecimal totalAmount,
                             LocalDateTime createdAt, List<OrderItemResponseDTO> items
                             ,PaymentMethod paymentMethod,OrderStatus orderStatus
-                            ,KitchenStatus kitchenStatus,DeliveryStatus deliveryStatus) {
+                            ,KitchenStatus kitchenStatus,DeliveryStatus deliveryStatus,
+                            Long deliveryTime, String verificationOtp) {
         this.orderId = orderId;
         this.totalAmount = totalAmount;
-        this.status = status;
         this.createdAt = createdAt;
         this.items = items;
         this.paymentMethod=paymentMethod;
         this.orderStatus=orderStatus;
         this.kitchenStatus=kitchenStatus;
         this.deliveryStatus=deliveryStatus;
+        this.deliveryTime=deliveryTime;
+        this.verificationOtp=verificationOtp;
     }
 
 
@@ -57,14 +59,6 @@ public class OrderResponseDTO {
 
     public void setTotalAmount(BigDecimal totalAmount) {
         this.totalAmount = totalAmount;
-    }
-
-    public String getStatus() {
-        return status;
-    }
-
-    public void setStatus(String status) {
-        this.status = status;
     }
 
     public LocalDateTime getCreatedAt() {
@@ -131,6 +125,16 @@ public class OrderResponseDTO {
 
 	public void setVerificationOtp(String verificationOtp) {
 		this.verificationOtp = verificationOtp;
+	}
+
+
+	public Long getDeliveryTime() {
+		return deliveryTime;
+	}
+
+
+	public void setDeliveryTime(Long deliveryTime) {
+		this.deliveryTime = deliveryTime;
 	}
 	
     

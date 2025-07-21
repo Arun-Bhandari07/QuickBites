@@ -59,7 +59,7 @@ public class StripeWebhookController {
     		return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Invalid Signature");
     	}
     	
-    	System.out.println("HELOOOOOOOOOOOOOOOOOOOOOOOOOOOO");
+    	
     	
     	//check the status of payment and update order status
     	if("checkout.session.completed".equals(event.getType())) {

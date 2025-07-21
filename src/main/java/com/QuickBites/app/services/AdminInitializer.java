@@ -25,7 +25,13 @@ public class AdminInitializer {
 	@Autowired
 	OTPService otpService;
 	
+	@Autowired
+	DeliveryChargeService deliveryChargeService;
 	
+	@PostConstruct
+	public void test() {
+		deliveryChargeService.calculateDeliveryChargeAndTime(27.678785243594245,83.4647827158915 );
+	}
 	
 	
 	@PostConstruct

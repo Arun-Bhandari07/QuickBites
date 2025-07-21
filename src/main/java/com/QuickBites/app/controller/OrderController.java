@@ -1,6 +1,5 @@
 package com.QuickBites.app.controller;
 
-import java.math.BigDecimal;
 import java.util.List;
 import java.util.Map;
 
@@ -20,6 +19,7 @@ import com.QuickBites.app.DTO.PlaceOrderRequestDTO;
 import com.QuickBites.app.DTO.PlaceOrderResponse;
 import com.QuickBites.app.entities.Order;
 import com.QuickBites.app.services.DeliveryChargeService;
+import com.QuickBites.app.services.DeliveryChargeService.DeliveryInfo;
 import com.QuickBites.app.services.OrderService;
 
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -86,10 +86,9 @@ public class OrderController {
     
     @PostMapping("/deliveryCharge")
     public ResponseEntity<?> calculateDeliveryCharge(@RequestBody deliveryLocation location){
-		System.out.println(location.lat());
-		System.out.println(location.lon());
-    	BigDecimal charge = deliveryChargeService.calculateDeliveryCharge(location.lat(), location.lon());
-    	return ResponseEntity.ok().body(charge);
+    	DeliveryInfo info = deliveryChargeService.calculateDeliveryChargeAndTime(location.lat(), location.lon());
+    	System.out.println("Calculated Delivery time: "+info.deliveryTime()+" minutes "+"Calculate deliveryCharge: "+info.deliveryCharge());
+    	return ResponseEntity.ok().body(info.deliveryCharge());
     }
     
 }

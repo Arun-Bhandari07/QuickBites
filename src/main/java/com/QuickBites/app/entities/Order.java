@@ -75,6 +75,8 @@ public class Order {
     
     private String verificationOtp;
     
+    private Long deliveryTime;
+    
 
 	public LocationInfo getLocationInfo() {
 		return locationInfo;
@@ -195,6 +197,14 @@ public class Order {
 
 	public void setVerificationOtp(String verificationOtp) {
 		this.verificationOtp = verificationOtp;
+	}
+
+	public Long getDeliveryTime() {
+		return deliveryTime;
+	}
+
+	public void setDeliveryTime(Long deliveryTime) {
+		this.deliveryTime = deliveryTime;
 	}
 
 	

@@ -1,7 +1,6 @@
 package com.QuickBites.app.entities;
 
 import java.math.BigDecimal;
-import java.time.LocalDateTime;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -14,6 +13,12 @@ import jakarta.persistence.OneToOne;
 @Entity
 public class DeliveryAgent {
 
+	public boolean isAvailable() {
+		return isAvailable;
+	}
+	public void setAvailable(boolean isAvailable) {
+		this.isAvailable = isAvailable;
+	}
 	@Id
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
 	private Long id;
@@ -27,15 +32,16 @@ public class DeliveryAgent {
 	@Column(nullable=false)
 	private String drivingLicense;
 	
-	@Column(nullable=false)
-	private boolean isActive;
-	
-	@Column(nullable=false)
-	private boolean isAvailable = false;
-	
-	private LocalDateTime lastSeen;
-	
 	private BigDecimal totalEarning = BigDecimal.ZERO;
+	
+	@Column(nullable=false)
+	private double distanceCoveredForDay= 0.0;
+	
+	@Column(nullable=false)
+	private int totalOrdersForDay= 0;
+	
+	@Column(nullable=false)
+	private boolean isAvailable;
 	
 	@OneToOne
 	@JoinColumn(name="_userId")
@@ -53,7 +59,6 @@ public class DeliveryAgent {
 	public void setCitizenshipPhotoBack(String citizenshipPhotoBack) {
 		this.citizenshipPhotoBack = citizenshipPhotoBack;
 	}
-	
 	
 	public User getUser() {
 		return user;
@@ -73,30 +78,27 @@ public class DeliveryAgent {
 	public void setDrivingLicense(String drivingLicense) {
 		this.drivingLicense = drivingLicense;
 	}
-	public boolean isActive() {
-		return isActive;
-	}
-	public void setActive(boolean isActive) {
-		this.isActive = isActive;
-	}
+	
 	public BigDecimal getTotalEarning() {
 		return totalEarning;
 	}
 	public void setTotalEarning(BigDecimal totalEarning) {
 		this.totalEarning = totalEarning;
 	}
-	public LocalDateTime getLastSeen() {
-		return lastSeen;
+	public double getDistanceCoveredForDay() {
+		return distanceCoveredForDay;
 	}
-	public void setLastSeen(LocalDateTime lastSeen) {
-		this.lastSeen = lastSeen;
+	public void setDistanceCoveredForDay(double distanceCoveredForDay) {
+		this.distanceCoveredForDay = distanceCoveredForDay;
 	}
-	public boolean isAvailable() {
-		return isAvailable;
+	public int getTotalOrdersForDay() {
+		return totalOrdersForDay;
 	}
-	public void setAvailable(boolean isAvailable) {
-		this.isAvailable = isAvailable;
+	public void setTotalOrdersForDay(int totalOrdersForDay) {
+		this.totalOrdersForDay = totalOrdersForDay;
 	}
+	
+	
 		
 	
 	

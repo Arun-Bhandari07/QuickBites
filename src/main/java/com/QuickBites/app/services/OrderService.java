@@ -38,6 +38,7 @@ import com.QuickBites.app.repositories.AddressRepository;
 import com.QuickBites.app.repositories.CartItemRepository;
 import com.QuickBites.app.repositories.OrderRepository;
 import com.QuickBites.app.repositories.UserRepository;
+import com.QuickBites.app.services.DeliveryChargeService.DeliveryInfo;
 
 @Service
 public class OrderService {
@@ -50,6 +51,7 @@ public class OrderService {
     private final DeliveryChargeService deliveryChargeService;
     private final SimpMessagingTemplate simpMessagingTemplate;
     private final OTPService otpService;
+    
 
     
     public OrderService(OrderRepository orderRepo,
@@ -72,7 +74,7 @@ public class OrderService {
 
     public PlaceOrderResponse placeOrder(PlaceOrderRequestDTO req, String username){
     	LocationInfo location;
-    	BigDecimal deliveryCharge;
+    	DeliveryInfo deliveryInfo;
     	
     	
         User user = userRepo.findByUserName(username)
@@ -99,10 +101,10 @@ public class OrderService {
             location.setLatitude(address.getLatitude());
             location.setLongitude(address.getLongitude());
             location.setDeliveryAddress(address.getFullAddress());
-            deliveryCharge = deliveryChargeService.calculateDeliveryCharge(address.getLatitude(), address.getLongitude());
+            deliveryInfo = deliveryChargeService.calculateDeliveryChargeAndTime(address.getLatitude(), address.getLongitude());
         } else {
             location = req.getLocationInfo(); // use manual input
-            deliveryCharge = deliveryChargeService.calculateDeliveryCharge(location.getLatitude(), location.getLongitude());
+            deliveryInfo = deliveryChargeService.calculateDeliveryChargeAndTime(location.getLatitude(), location.getLongitude());
         }
         
         Order order = new Order();
@@ -112,7 +114,8 @@ public class OrderService {
         order.setSpecialInstructions(req.getSpecialInstructions());
         order.setLocationInfo(location);
         order.setPhone(req.getPhoneNumber());
-        order.setDeliveryCharge(deliveryCharge);
+        order.setDeliveryCharge(deliveryInfo.deliveryCharge());
+       
 
         List<OrderItem> orderItems = new ArrayList<>();
         BigDecimal totalAmount = BigDecimal.ZERO;
@@ -144,7 +147,7 @@ public class OrderService {
         	order.setDeliveryCharge(BigDecimal.valueOf(0.00));
         }
    
-        System.out.println(req.getPaymentMethod());
+        
         
         if (req.getPaymentMethod() == PaymentMethod.STRIPE) {
         	order.setPaymentMethod(PaymentMethod.STRIPE);
@@ -155,10 +158,12 @@ public class OrderService {
             order.setOrderStatus(OrderStatus.PENDING_PAYMENT); 
           
         }
+        
         order.setKitchenStatus(KitchenStatus.TO_BE_PREPARED);
     	order.setDeliveryStatus(DeliveryStatus.TO_BE_DELIVERED);
     	order.setVerificationOtp(otpService.generateOTP());
         Order savedOrder = orderRepo.save(order);
+        
        String stripeUrl = req.getPaymentMethod() == PaymentMethod.STRIPE
     		   ?stripeService.makePayment(savedOrder):null;
       
@@ -199,15 +204,15 @@ public class OrderService {
         OrderResponseDTO responseDTO =  new OrderResponseDTO(
             order.getId(),
             order.getTotalAmount(),
-            order.getOrderStatus().name(),
             order.getCreatedAt(),
             itemDTOs,
             order.getPaymentMethod(),
             order.getOrderStatus(),
             order.getKitchenStatus(),
-            order.getDeliveryStatus()
+            order.getDeliveryStatus(),
+            order.getDeliveryTime(),
+            order.getVerificationOtp()
         );
-        responseDTO.setVerificationOtp(order.getVerificationOtp());
         return responseDTO;
         
     }
@@ -249,26 +254,26 @@ public class OrderService {
         return stripeService.makePayment(order);
     }
 
-    public void cancelOrder(Long id, Authentication authentication) {
-    	
-    	 Order order = orderRepo.findByIdAndUserUserName(id,authentication.getName())
-    			 .orElseThrow(()->new ResourceNotFoundException("Cannot find order with given id "+id));
-    	 CustomUserDetails customUser = (CustomUserDetails )authentication.getPrincipal();
-    	 User user = customUser.getUser();
-    	 Duration duration = Duration.between(order.getCreatedAt(), LocalDateTime.now());
-    	 if(duration.toMinutes()>2) {
-    		 user.setTrustScore(user.getTrustScore()-1);    		 
-    		 userRepo.save(user);
-    	 }
-    	 
-    	 order.setDeliveryStatus(DeliveryStatus.CANCELLED);
-    	 orderRepo.save(order);
- 	 
-    	 //WebSocket Broadcast to kitchen 
-    	    KitchenUpdateEventDTO event = new KitchenUpdateEventDTO(order.getId(), order.getDeliveryStatus().name());
-    	    simpMessagingTemplate.convertAndSend("/topic/kitchen",event);
-    	 
-    }
+	    public void cancelOrder(Long id, Authentication authentication) {
+	    	
+	    	 Order order = orderRepo.findByIdAndUserUserName(id,authentication.getName())
+	    			 .orElseThrow(()->new ResourceNotFoundException("Cannot find order with given id "+id));
+	    	 CustomUserDetails customUser = (CustomUserDetails )authentication.getPrincipal();
+	    	 User user = customUser.getUser();
+	    	 Duration duration = Duration.between(order.getCreatedAt(), LocalDateTime.now());
+	    	 if(duration.toMinutes()>2) {
+	    		 user.setTrustScore(user.getTrustScore()-1);    		 
+	    		 userRepo.save(user);
+	    	 }
+	    	 
+	    	 order.setDeliveryStatus(DeliveryStatus.CANCELLED);
+	    	 orderRepo.save(order);
+	 	 
+	    	 //WebSocket Broadcast to kitchen 
+	    	    KitchenUpdateEventDTO event = new KitchenUpdateEventDTO(order.getId(), order.getDeliveryStatus().name());
+	    	    simpMessagingTemplate.convertAndSend("/topic/kitchen",event);
+	    	 
+	    }
     
    
     

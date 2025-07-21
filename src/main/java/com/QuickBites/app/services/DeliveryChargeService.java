@@ -39,7 +39,11 @@ public class DeliveryChargeService {
 	
 	private final RestTemplate restTemplate = new RestTemplate();
 	
-	public double calculateDistance(double userLat, double userLon) {
+	public record DeliveryStats(Double deliveryDistance , Long deliveryTime ) {};
+	
+	public record DeliveryInfo(BigDecimal deliveryCharge , Long deliveryTime ) {};
+	
+	public DeliveryStats calculateDistance(double userLat, double userLon) {
 		
 		String uri = orsBaseUrl+"/v2/directions/driving-car";
 		
@@ -56,14 +60,20 @@ public class DeliveryChargeService {
 		ResponseEntity<JsonNode> response = restTemplate.exchange(uri,HttpMethod.POST, entity,JsonNode.class);
 				
 		if(response.getStatusCode() == HttpStatus.OK) {
-		double distance = response.getBody()
+		double deliveryDistance = response.getBody()
 							.path("routes").get(0)
 							.path("summary")
 							.path("distance")
 							.asDouble();
 			
-			System.out.println(distance);
-			return distance/1000;
+		Long deliveryTime = response.getBody()
+							.path("routes").get(0)
+							.path("summary")
+							.path("duration")
+							.asLong();
+				
+			DeliveryStats stats= new DeliveryStats(deliveryDistance/1000,deliveryTime);
+			return stats;
 		}
 		else {
 			throw new RuntimeException("Error fetching distance from ORS");
@@ -72,17 +82,31 @@ public class DeliveryChargeService {
 	}
 	
 	
-	public BigDecimal calculateDeliveryCharge(double userLat , double userLon) {
-		double distanceKm = calculateDistance(userLat, userLon);
+	public DeliveryInfo calculateDeliveryChargeAndTime(double userLat , double userLon) {
+		
+		//calculate Delivery Charge with respect to distance
+		DeliveryStats stats = calculateDistance(userLat, userLon);
+		double distanceKm =stats.deliveryDistance ;
 		if(distanceKm>MAX_DELIVERY_DISTANCE) {
 			throw new BadRequestException("Cannot deliver at the given location");
 		}
 		BigDecimal distanceInBigDecimal = BigDecimal.valueOf(distanceKm);
 		
 		BigDecimal deliveryCharge = BASE_DELIVERY_CHARGE.add(distanceInBigDecimal.multiply(RATE_PER_KM));
-		return deliveryCharge.setScale(0, RoundingMode.UP);
-		 
 		
+		deliveryCharge = deliveryCharge.setScale(0, RoundingMode.UP);
+		
+		Long deliveryTime = stats.deliveryTime;
+		
+		DeliveryInfo info = new DeliveryInfo(deliveryCharge, calculateDeliveryDuration(deliveryTime));
+		return info;
+		 
+	}
+	
+	public Long calculateDeliveryDuration(Long durationInSeconds) {
+		Long durationInMinutes = durationInSeconds/60;
+	
+		return durationInMinutes.longValue();
 	}
 	
 	
