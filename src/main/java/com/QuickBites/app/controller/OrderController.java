@@ -18,8 +18,8 @@ import com.QuickBites.app.DTO.OrderResponseDTO;
 import com.QuickBites.app.DTO.PlaceOrderRequestDTO;
 import com.QuickBites.app.DTO.PlaceOrderResponse;
 import com.QuickBites.app.entities.Order;
-import com.QuickBites.app.services.DeliveryChargeService;
-import com.QuickBites.app.services.DeliveryChargeService.DeliveryInfo;
+import com.QuickBites.app.services.DeliveryRouteService;
+import com.QuickBites.app.services.DeliveryRouteService.DeliveryInfo;
 import com.QuickBites.app.services.OrderService;
 
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -31,12 +31,12 @@ import jakarta.validation.Valid;
 public class OrderController {
 
     private final OrderService orderService;
-    private final DeliveryChargeService deliveryChargeService;
+    private final DeliveryRouteService deliveryChargeService;
     
     private record deliveryLocation(double lat , double lon) {};
     
     
-    public OrderController(OrderService orderService,DeliveryChargeService deliveryChargeService) {
+    public OrderController(OrderService orderService,DeliveryRouteService deliveryChargeService) {
     	this.orderService=orderService;
     	this.deliveryChargeService=deliveryChargeService;
     }

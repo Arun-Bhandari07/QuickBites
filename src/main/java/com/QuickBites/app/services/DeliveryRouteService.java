@@ -2,6 +2,7 @@ package com.QuickBites.app.services;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
@@ -19,7 +20,7 @@ import com.QuickBites.app.Exception.BadRequestException;
 import com.fasterxml.jackson.databind.JsonNode;
 
 @Service
-public class DeliveryChargeService {
+public class DeliveryRouteService {
 
 	@Value("${resturant.location.latitude}")
 	private double lat;
@@ -42,6 +43,12 @@ public class DeliveryChargeService {
 	public record DeliveryStats(Double deliveryDistance , Long deliveryTime ) {};
 	
 	public record DeliveryInfo(BigDecimal deliveryCharge , Long deliveryTime ) {};
+	
+	public record DeliveryRouteResponse(
+		    double distanceKm,
+		    long durationSeconds,
+		    List<List<Double>> pathCoordinates
+		) {}
 	
 	public DeliveryStats calculateDistance(double userLat, double userLon) {
 		
@@ -80,6 +87,44 @@ public class DeliveryChargeService {
 		}
 		
 	}
+	
+	
+	public DeliveryRouteResponse getDeliveryRoute(double userLat, double userLon) {
+	    String uri = orsBaseUrl + "/v2/directions/driving-car/geojson";
+
+	    HttpHeaders headers = new HttpHeaders();
+	    headers.setContentType(MediaType.APPLICATION_JSON);
+	    headers.add("Authorization", key);
+
+	    Map<String, Object> payload = Map.of("coordinates",
+	            List.of(List.of(lon, lat), List.of(userLon, userLat)));
+
+	    HttpEntity<Map<String, Object>> entity = new HttpEntity<>(payload, headers);
+
+	    ResponseEntity<JsonNode> response = restTemplate.exchange(uri, HttpMethod.POST, entity, JsonNode.class);
+
+	    if (response.getStatusCode() == HttpStatus.OK) {
+	        JsonNode root = response.getBody();
+	        JsonNode feature = root.path("features").get(0);
+	        JsonNode summary = feature.path("properties").path("summary");
+
+	        double distance = summary.path("distance").asDouble() / 1000.0;
+	        long duration = summary.path("duration").asLong();
+
+	        List<List<Double>> path = new ArrayList<>();
+	        for (JsonNode coord : feature.path("geometry").path("coordinates")) {
+	            // GeoJSON format is [lon, lat]
+	            path.add(List.of(coord.get(1).asDouble(), coord.get(0).asDouble())); // [lat, lon]
+	        }
+
+	        return new DeliveryRouteResponse(distance, duration, path);
+	    }
+
+	    throw new RuntimeException("Failed to fetch route from ORS");
+	}
+	
+	
+	
 	
 	
 	public DeliveryInfo calculateDeliveryChargeAndTime(double userLat , double userLon) {

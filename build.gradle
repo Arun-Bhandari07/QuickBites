@@ -44,6 +44,11 @@ dependencies {
 	
 	implementation 'com.cloudinary:cloudinary-http44:1.29.0'
 	
+	
+	implementation 'com.graphhopper:graphhopper-core:6.0'
+	implementation 'org.locationtech.jts:jts-core:1.18.2'
+	
+	
 }
 
 tasks.named('test') {

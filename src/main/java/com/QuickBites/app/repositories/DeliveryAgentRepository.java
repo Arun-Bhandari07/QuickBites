@@ -12,4 +12,6 @@ public interface DeliveryAgentRepository extends JpaRepository<DeliveryAgent, Lo
 	@Query("SELECT a from DeliveryAgent a WHERE a.isAvailable = true ORDER BY a.id ASC")
 	Optional<DeliveryAgent> findFirstAvailableAgent();
 	
+	Optional<DeliveryAgent> findByUserId(int userId);
+	
 }

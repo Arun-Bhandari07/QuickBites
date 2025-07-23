@@ -15,7 +15,9 @@ build/
 .sts4-cache
 application.properties
 src/main/resources/static/uploads/
+src/main/resources/maps/
 /uploads/
+graph-cache/
 
 
 bin/

@@ -1,14 +1,18 @@
 package com.QuickBites.app.repositories;
 
+import java.math.BigDecimal;
 import java.util.List;
 import java.util.Optional;
 
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import com.QuickBites.app.AdminOrderMetrics;
 import com.QuickBites.app.entities.Order;
+import com.QuickBites.app.enums.DeliveryStatus;
+import com.QuickBites.app.enums.PaymentMethod;
 
 @Repository
 public interface OrderRepository extends JpaRepository<Order, Long> {
@@ -38,4 +42,42 @@ public interface OrderRepository extends JpaRepository<Order, Long> {
     	       "COUNT(*) FILTER (WHERE payment_method = 'COD') AS cod_payments_total " +
     	       "FROM orders", nativeQuery = true)
     	AdminOrderMetrics fetchAllOrderMetrics();
+    
+    long countByAssignedAgentIdAndDeliveryStatusNotIn(
+            @Param("agentId") Long agentId,
+            @Param("statuses") List<DeliveryStatus> statuses
+    );
+    
+    @Query("SELECT COALESCE(SUM(o.totalAmount), 0.0) FROM Order o " +
+            "WHERE o.assignedAgent.id = :agentId " +
+            "AND o.deliveryStatus = :deliveredStatus " +
+            "AND o.paymentMethod = :codPaymentMethod " +
+    		"AND FUNCTION('DATE', o.createdAt) = CURRENT_DATE")
+     BigDecimal sumTotalEarningsTodayForAgent(
+             @Param("agentId") Long agentId,
+             @Param("deliveredStatus") DeliveryStatus deliveredStatus,
+             @Param("codPaymentMethod") PaymentMethod codPaymentMethod
+     );
+    
+    @Query("SELECT COUNT(o) FROM Order o " +
+            "WHERE o.assignedAgent.id = :agentId " +
+            "AND o.deliveryStatus = :deliveredStatus " +
+    		 "AND FUNCTION('DATE', o.createdAt) = CURRENT_DATE")
+     long countCompletedDeliveriesTodayForAgent( 
+             @Param("agentId") Long agentId,
+             @Param("deliveredStatus") DeliveryStatus deliveredStatus
+     );
+    
+    @Query("SELECT COUNT(o) FROM Order o WHERE o.assignedAgent.id = :agentId AND FUNCTION('DATE', o.createdAt) = CURRENT_DATE")
+    long countAssignedDeliveriesTodayForAgent(@Param("agentId") Long agentId);
+    
+    List<Order> findByAssignedAgentIdAndDeliveryStatusOrderByCreatedAtDesc(
+            @Param("agentId") Long agentId,
+            @Param("deliveredStatus") DeliveryStatus deliveredStatus
+    );
+
+    Optional<Order> findByIdAndAssignedAgentId(
+            @Param("orderId") Long orderId,
+            @Param("agentId") Long agentId
+    );
 }

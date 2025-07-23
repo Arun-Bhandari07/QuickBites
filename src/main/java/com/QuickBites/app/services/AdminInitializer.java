@@ -26,7 +26,7 @@ public class AdminInitializer {
 	OTPService otpService;
 	
 	@Autowired
-	DeliveryChargeService deliveryChargeService;
+	DeliveryRouteService deliveryChargeService;
 	
 	@PostConstruct
 	public void test() {

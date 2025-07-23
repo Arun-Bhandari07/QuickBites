@@ -38,7 +38,7 @@ import com.QuickBites.app.repositories.AddressRepository;
 import com.QuickBites.app.repositories.CartItemRepository;
 import com.QuickBites.app.repositories.OrderRepository;
 import com.QuickBites.app.repositories.UserRepository;
-import com.QuickBites.app.services.DeliveryChargeService.DeliveryInfo;
+import com.QuickBites.app.services.DeliveryRouteService.DeliveryInfo;
 
 @Service
 public class OrderService {
@@ -48,7 +48,7 @@ public class OrderService {
     private final StripeService stripeService;
     private final CartItemRepository cartItemRepo;
     private final AddressRepository addressRepo;
-    private final DeliveryChargeService deliveryChargeService;
+    private final DeliveryRouteService deliveryChargeService;
     private final SimpMessagingTemplate simpMessagingTemplate;
     private final OTPService otpService;
     
@@ -59,7 +59,7 @@ public class OrderService {
                         StripeService stripeService,
                         CartItemRepository cartItemRepo
                         ,AddressRepository addressRepo
-                        ,DeliveryChargeService deliveryChargeService
+                        ,DeliveryRouteService deliveryChargeService
                         ,SimpMessagingTemplate simpMessagingTemplate
                         ,OTPService otpService) {
         this.orderRepo = orderRepo;
