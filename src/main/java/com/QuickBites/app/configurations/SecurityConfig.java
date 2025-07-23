@@ -53,6 +53,7 @@ public class SecurityConfig {
 						.requestMatchers("/public/**","/uploads/**").permitAll()
 						.requestMatchers("/api/v1/stripe/**").permitAll()
 						.requestMatchers("/ws/**").permitAll()
+						.requestMatchers("/api/cloudinaryImages/**").permitAll()
 						.requestMatchers("api/v1/staff/**").hasRole("RESTURANTSTAFF")
 						.requestMatchers("/swagger-ui/**","/v3/api-docs/**","/swagger-ui.html").permitAll()
 						.requestMatchers("/api/v1/auth/**").permitAll()
@@ -70,7 +71,7 @@ public class SecurityConfig {
 	@Bean
 	public  CorsConfigurationSource corsConfigurationSource() {
 		CorsConfiguration config = new CorsConfiguration();
-		config.setAllowedOrigins(List.of("https://528fd0e96e71.ngrok-free.app","https://3b1c40af6695.ngrok-free.app/","http://localhost:3000","http://127.0.0.1:5500","http://127.0.0.1:5501","https://5aeb0071168a.ngrok-free.app","https://ecd9488def81.ngrok-free.app"));
+		config.setAllowedOrigins(List.of("http://localhost:3000","https://519862b3b376.ngrok-free.app","https://fa2b60b70063.ngrok-free.app"));
 		config.setAllowedMethods(List.of("GET","POST","PUT","DELETE","OPTIONS"));
 		config.setAllowedHeaders(List.of("*"));
 		config.setAllowCredentials(true);

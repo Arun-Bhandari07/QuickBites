@@ -1,23 +1,22 @@
 package com.QuickBites.app.services;
 
 import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
-import java.nio.file.StandardCopyOption;
 import java.util.Set;
 import java.util.UUID;
 
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
-import com.QuickBites.app.Exception.FileStorageException;
 import com.QuickBites.app.Exception.InvalidFileException;
+import com.QuickBites.app.enums.ImageType;
 
 @Service
 public class FileService {
 	
+	@Autowired
+	CloudinaryService cloudinaryService;
 
 	@Value("${file.storage.orgpath}")
 	private  final String orgPath;
@@ -40,37 +39,15 @@ public class FileService {
 	}
 	
 	
-	public String saveFile(MultipartFile file){
+	public String saveFile(MultipartFile file,ImageType imageType){
 		validateFile(file);
 		String fileName = UUID.randomUUID()+"_"+file.getOriginalFilename();
-		Path tempUploadPath = Paths.get(tempPath);	
-		try {
-			if(!Files.exists(tempUploadPath)) {
-			Files.createDirectories(tempUploadPath);
-		}
-		Path filePath = tempUploadPath.resolve(fileName).normalize().toAbsolutePath();
-		if(!filePath.normalize().startsWith(tempUploadPath.normalize().toAbsolutePath())) {
-			throw new InvalidFileException("File path cannot be resolved");
-		}
-		Files.copy(file.getInputStream(),filePath,StandardCopyOption.REPLACE_EXISTING);
-		return fileName;
-		}catch(IOException ex) {
-			throw new FileStorageException("Error with saving file",ex);
-		}
-		
+		return cloudinaryService.uploadImage(file, imageType);
 	}
 		
-	public void moveFile(String fileName) throws IOException{
-		Path sourcePath = Paths.get(tempPath,fileName).normalize();
-		Path destinationPath = Paths.get(orgPath,fileName).normalize();	
-		
-		try {
-			Files.move(sourcePath, destinationPath, StandardCopyOption.REPLACE_EXISTING);
-		}catch(IOException ex) {
-		
-			throw new FileStorageException("Error moving file",ex);
-		}
-		
+	public String moveFile(String fileName) throws IOException{
+		String newImageUrl = cloudinaryService.moveAgentFile(fileName);
+		return newImageUrl;
 	}
 	
 	public void validateFile(MultipartFile file) {

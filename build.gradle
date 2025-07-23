@@ -42,6 +42,8 @@ dependencies {
 	implementation 'org.springframework.boot:spring-boot-starter-data-redis'
 	implementation 'com.stripe:stripe-java:29.0.0'
 	
+	implementation 'com.cloudinary:cloudinary-http44:1.29.0'
+	
 }
 
 tasks.named('test') {

@@ -34,6 +34,7 @@ import com.QuickBites.app.Exception.UserNotFoundException;
 import com.QuickBites.app.configurations.SecurityConfig;
 import com.QuickBites.app.entities.PendingUser;
 import com.QuickBites.app.entities.User;
+import com.QuickBites.app.enums.ImageType;
 import com.QuickBites.app.enums.RoleName;
 import com.QuickBites.app.repositories.DeliveryAgentRepository;
 import com.QuickBites.app.repositories.PendingUserRepository;
@@ -153,9 +154,9 @@ public class AuthService {
 			String licensePath = "";
 			AgentRegisterRequest agentReq = (AgentRegisterRequest) req;
 			try {
-				citizenshipPathFront = fileService.saveFile(agentReq.getCitizenshipPhotoFront());
-				citizenshipPathBack = fileService.saveFile(agentReq.getCitizenshipPhotoBack());
-				licensePath = fileService.saveFile(agentReq.getDrivingLicense());
+				citizenshipPathFront = fileService.saveFile(agentReq.getCitizenshipPhotoFront(),ImageType.DELIVERYAGENTREQUEST);
+				citizenshipPathBack = fileService.saveFile(agentReq.getCitizenshipPhotoBack(),ImageType.DELIVERYAGENTREQUEST);
+				licensePath = fileService.saveFile(agentReq.getDrivingLicense(),ImageType.DELIVERYAGENTREQUEST);
 			}catch(FileHandlingException ex) {
 				logger.warn(ex.getMessage());
 				throw new FileStorageException("Problem with storing File",ex);

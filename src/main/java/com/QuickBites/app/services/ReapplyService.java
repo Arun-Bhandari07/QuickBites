@@ -109,7 +109,7 @@ public class ReapplyService {
 				oldFileName = user.getDriverLicense();
 				break;
 			}
-			String newFileName = fileService.saveFile(newFile);
+			String newFileName = fileService.saveFile(newFile,ImageType.DELIVERYAGENTREQUEST);
 
 			switch (documentType) {
 			case "citizenshipPhotoFront":
