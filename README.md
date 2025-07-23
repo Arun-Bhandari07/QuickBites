@@ -5,17 +5,17 @@ A scalable and resilient Spring Boot backend designed to power dynamic restauran
 ## Tech Stack
 
 - Backend: Spring Boot (Java 21)
-- 
+
 - Database: PostgreSQL
-- 
+ 
 - Real-Time Communication: WebSockets
-- 
+
 - Media Storage: Cloudinary
-- 
+ 
 - Caching: Redis
-- 
+ 
 - Payments: Stripe
-- 
+
 - Geospatial Calculations: OpenRouteService, GraphHopper
 
 ## Core Features
